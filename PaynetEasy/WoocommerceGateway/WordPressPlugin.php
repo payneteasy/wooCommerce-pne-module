@@ -25,13 +25,16 @@ class WordPressPlugin
         $table                      = self::get_table();
 
         return "CREATE TABLE $table (
-  `transaction_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+ `transaction_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `order_id` bigint(20) NOT NULL DEFAULT '0',
+  `paynet_order_id` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'Order id assigned to the order by PaynetEasy',
   `mode` enum('production','sandbox') NOT NULL DEFAULT 'production',
   `operation` varchar(255) NOT NULL DEFAULT '',
   `payment_method` enum('sale','form','iframe') NOT NULL DEFAULT 'sale',
   `state` enum('new','processing','done') NOT NULL DEFAULT 'new' COMMENT 'State of transaction',
   `status` enum('new','processing','approved','declined','filtered','error') NOT NULL DEFAULT 'new',
+  `date_create` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `date_update` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `login` varchar(255) NOT NULL DEFAULT '',
   `end_point` varchar(255) NOT NULL DEFAULT '' COMMENT 'Merchant end point',
   `end_point_group` varchar(255) DEFAULT '',
@@ -39,7 +42,9 @@ class WordPressPlugin
   `html` text COMMENT 'html data from paynet',
   `errors` text,
   PRIMARY KEY (`transaction_id`),
-  KEY `order_id` (`order_id`)
+  KEY `order_id` (`order_id`),
+  KEY `paynet_order_id` (`paynet_order_id`),
+  KEY `state` (`state`)
 ) $collate";
     }
 

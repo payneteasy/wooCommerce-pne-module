@@ -1,0 +1,256 @@
+# Copyright (C) 2019 Edmond Dantes
+# This file is distributed under the same license as the PaynetEasy Gateway plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: PaynetEasy Gateway 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/paynet-easy-gateway\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2019-02-07T13:45:11+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.1.0\n"
+"X-Domain: paynet-easy-gateway\n"
+
+#. Plugin Name of the plugin
+#: PaynetEasy/WoocommerceGateway/Gateway.php:31
+msgid "PaynetEasy Gateway"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "http://example.com/plugin-name-uri/"
+msgstr ""
+
+#. Description of the plugin
+msgid "PaynetEasy Gateway."
+msgstr ""
+
+#. Author of the plugin
+msgid "Edmond Dantes"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://payneteasy.com/"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:26
+msgid "Visa Mastercard"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:33
+msgid "PaynetEasy Gateway for Visa and Mastercard"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:147
+msgid "CALLBACK has been received"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:197
+msgid "REDIRECT has been received"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:227
+#: PaynetEasy/WoocommerceGateway/Gateway.php:519
+msgid "Printed name"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:228
+msgid "Card number"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:229
+msgid "Expire month"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:230
+msgid "Expire year"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:231
+msgid "Cvv"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:241
+msgid "Required \"%s\" field"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:354
+msgid "Enable/Disable"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:355
+msgid "Enable"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:361
+msgid "Title"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:363
+msgid "This controls the title which the user sees during checkout."
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:364
+msgid "Credit Card"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:367
+msgid "Description"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:369
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:373
+msgid "Sandbox test mode"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:374
+msgid "Enable sandbox test mode"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:376
+msgid "Place the payment gateway in development mode."
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:380
+msgid "Debug Mode"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:382
+msgid "Show Detailed Error Messages and API requests / responses on the checkout page."
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:385
+msgid "Off"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:386
+msgid "On"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:390
+msgid "Log level"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:406
+msgid "Payment Method"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:410
+msgid "Payment method description"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:417
+msgid "End point"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:419
+#: PaynetEasy/WoocommerceGateway/Gateway.php:454
+msgid "The End point ID is an entry point for incoming Merchant’s transactions for single currency integration"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:424
+msgid "End point group"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:426
+#: PaynetEasy/WoocommerceGateway/Gateway.php:461
+msgid "The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:431
+msgid "Login"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:433
+#: PaynetEasy/WoocommerceGateway/Gateway.php:468
+msgid "Merchant login name"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:438
+msgid "Control Key"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:440
+#: PaynetEasy/WoocommerceGateway/Gateway.php:475
+msgid "Merchant control string for sign"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:445
+msgid "Gateway url"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:447
+msgid "Url for gateway"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:452
+msgid "Sandbox End point"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:459
+msgid "Sandbox End point group"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:466
+msgid "Sandbox Login"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:473
+msgid "Sandbox Control Key"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:480
+msgid "Gateway url sandbox"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:482
+msgid "Url for gateway sandbox"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:518
+msgid "Card Number"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:520
+msgid "Expiry month"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:521
+msgid "Expiry year"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:522
+msgid "Card Code (CVC)"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:255
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:259
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:263
+msgid "Payment processing"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:273
+msgid "Payment approved"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:297
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:298
+msgid "Payment declined"
+msgstr ""
+
+#: templates/progress.php:117
+msgid "Progress Title"
+msgstr ""
+
+#: templates/progress.php:118
+msgid "Progress message"
+msgstr ""
+
+#: templates/progress.php:124
+msgid "Update"
+msgstr ""

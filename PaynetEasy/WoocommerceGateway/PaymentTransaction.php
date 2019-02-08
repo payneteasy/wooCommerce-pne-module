@@ -8,12 +8,20 @@ use PaynetEasy\PaynetEasyApi\PaymentData\Payment;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 use PaynetEasy\PaynetEasyApi\Util\RegionFinder;
 
-class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\PaymentData\PaymentTransaction
+/**
+ * Class PaymentTransaction
+ * @package PaynetEasy\WoocommerceGateway
+ */
+class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentData\PaymentTransaction
 {
+    const DATABASE_TABLE            = 'payneteasy_transactions';
     /**
      * New transaction
      */
     const NEW_TRANSACTION           = null;
+    /**
+     * State of handle
+     */
     const STATE_NEW                 = 'new';
     const STATE_PROCESSING          = 'processing';
     const STATE_DONE                = 'done';
@@ -22,14 +30,31 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
      * Table for transactions
      * @var string
      */
-    protected $table                = 'payneteasy_transactions';
+    protected $table;
 
+    /**
+     * @var string
+     */
     protected $order_id;
+    /**
+     * @var int
+     */
     protected $transaction_id;
+    /**
+     * @var string
+     */
     protected $payment_method;
+    /**
+     * @var string
+     */
     protected $state;
+    /**
+     * Html for 3D redirect
+     * @var string
+     */
     protected $html;
     /**
+     * Response from server
      * @var Response
      */
     protected $response;
@@ -38,6 +63,11 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
      * @var \WC_Order
      */
     protected $order;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
 
     /**
      * Find by $paynet_order_id
@@ -50,7 +80,7 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
         global $wpdb;
 
         $paynet_order_id            = esc_sql($paynet_order_id);
-        $table                      = $wpdb->prefix.'payneteasy_transactions';
+        $table                      = $wpdb->prefix.self::DATABASE_TABLE;
 
         $query                      = "SELECT * FROM {$table} WHERE paynet_order_id = '{$paynet_order_id}'";
 
@@ -77,8 +107,8 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
     {
         global $wpdb;
 
-        // add prefix
-        $this->table                = $wpdb->prefix.$this->table;
+        // define of table name
+        $this->table                = $wpdb->prefix.self::DATABASE_TABLE;
 
         parent::__construct();
 
@@ -107,24 +137,35 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
         $this->define_payment_data();
     }
 
+    public function assign_logger(LoggerInterface $logger)
+    {
+        $this->logger               = $logger;
+        return $this;
+    }
+
     public function transaction_id()
     {
         return $this->transaction_id;
     }
 
+    /**
+     * Returns payment method for this transaction
+     *
+     * @return string|null
+     */
     public function get_payment_method()
     {
         return $this->payment_method;
     }
 
+    /**
+     * Is inline payment method (used credit card form)
+     *
+     * @return bool
+     */
     public function is_inline_payment_method()
     {
-        if($this->payment_method === 'form')
-        {
-            return false;
-        }
-
-        return true;
+        return $this->payment_method === 'sale';
     }
 
     public function get_html_for_show()
@@ -352,7 +393,7 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
         [
             'client_id'             => $this->order_id,
             'description'           => $this->generate_order_description(),
-            'merchant_data'         => $this->generate_merchant_data(),
+            //'merchant_data'         => $this->generate_merchant_data(),
             'amount'                => $this->define_order_total(),
             'currency'              => $this->define_order_currency(),
             'customer'              =>  new Customer($customer_data),
@@ -692,5 +733,32 @@ class PaymentTransaction                   extends \PaynetEasy\PaynetEasyApi\Pay
         }
 
         return $result['transaction_id'];
+    }
+
+    /**
+     *
+     *
+     * @param       string      $message
+     * @param       string      $level
+     * @return  $this
+     */
+    protected function log($message, $level = \WC_Log_Levels::NOTICE)
+    {
+        if($this->logger instanceof LoggerInterface)
+        {
+            $this->logger->log($message, $level);
+        }
+
+        return $this;
+    }
+
+    protected function debug($message)
+    {
+        return $this->log($message, \WC_Log_Levels::DEBUG);
+    }
+
+    protected function error($message)
+    {
+        return $this->log($message, \WC_Log_Levels::ERROR);
     }
 }

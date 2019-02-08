@@ -6,7 +6,8 @@ use PaynetEasy\PaynetEasyApi\PaymentProcessor;
 use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 
-class Gateway                       extends \WC_Payment_Gateway
+class Gateway                       extends     \WC_Payment_Gateway
+                                    implements  LoggerInterface
 {
     /**
      * Log severity level (default ERROR)
@@ -28,6 +29,7 @@ class Gateway                       extends \WC_Payment_Gateway
         $this->icon                 = $this->image_url('visa-mastercard.jpg');
         // in case you need a custom credit card form
         $this->has_fields           = true;
+        // Title of method
         $this->method_title         = __('PaynetEasy Gateway', 'paynet-easy-gateway');
         // will be displayed on the options page
         $this->method_description   = __('PaynetEasy Gateway for Visa and Mastercard', 'paynet-easy-gateway');
@@ -67,6 +69,9 @@ class Gateway                       extends \WC_Payment_Gateway
         {
             $this->description      = $this->settings['description'];
         }
+
+        // has fields mode is on only for Credit Card
+        $this->has_fields           = $this->define_payment_method() === 'sale';
 
         // This action hook saves the settings
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options'] );
@@ -116,108 +121,6 @@ class Gateway                       extends \WC_Payment_Gateway
         return $fields;
     }
 
-    public function on_callback()
-    {
-        $this->log('Detect callback using');
-
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect callback using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect callback using with wrong "orderid" = '.$paynet_order_id);
-        }
-
-        $this->log('Detect callback using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('CALLBACK has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processPaynetEasyCallback
-        (
-            new CallbackResponse($_REQUEST),
-            $transaction
-        );
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
-        return 1;
-    }
-
-    /**
-     *
-     *
-     * @return  int
-     *
-     * @throws  \Exception
-     */
-    public function on_redirect()
-    {
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect redirect_url using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect redirect_url using with wrong "orderid" = '.$paynet_order_id);
-        }
-
-        $this->log('Detect redirect_url using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('REDIRECT has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processCustomerReturn
-        (
-            new CallbackResponse($_REQUEST),
-            $transaction
-        );
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
-        $redirect               = $this->define_redirect_for_transaction($transaction);
-
-        if($redirect !== null)
-        {
-            wp_redirect($redirect);
-        }
-
-        return 1;
-    }
-
     public function validate_fields()
     {
         // Check fields
@@ -246,13 +149,17 @@ class Gateway                       extends \WC_Payment_Gateway
     }
 
     /**
-     * @param int $order_id
-     * @return array
-     * @throws \Exception
+     * Start of process order
+     *
+     * @param   int                 $order_id
+     *
+     * @return  array
+     *
+     * @throws  \Exception
      */
     public function process_payment($order_id)
     {
-        $this->log($order_id.': Start processing payment');
+        $this->debug($order_id.': Start processing payment');
 
         // Init Payment Processor
         $payment_processor          = $this->create_payment_processor();
@@ -262,15 +169,17 @@ class Gateway                       extends \WC_Payment_Gateway
             $this->define_payment_method($order_id)
         );
 
-        $transaction->setQueryConfig($this->get_query_config());
+        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
 
         // not create two transaction in twice
         if($transaction->is_processing())
         {
+            $this->debug($order_id.": Find processing transaction {$transaction->transaction_id()}");
             $payment_processor->executeQuery('status', $transaction);
         }
         else
         {
+            $this->debug($order_id.": Start process transaction {$transaction->transaction_id()}");
             $payment_processor->executeQuery($transaction->get_payment_method(), $transaction);
         }
 
@@ -295,7 +204,7 @@ class Gateway                       extends \WC_Payment_Gateway
     {
         // 1. Init transaction
         $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->setQueryConfig($this->get_query_config());
+        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
 
         // 2. Execute query
         $payment_processor          = $this->create_payment_processor();
@@ -324,6 +233,116 @@ class Gateway                       extends \WC_Payment_Gateway
         return $redirect;
     }
 
+    /**
+     * Handler for callback from PaynetEsy
+     *
+     * @return int
+     *
+     * @throws \Exception
+     */
+    public function on_callback()
+    {
+        $this->log('Detect callback using');
+
+        // try to find by $paynet_order_id
+        if(empty($_REQUEST['orderid']))
+        {
+            $this->log('Detect callback using with empty "orderid"');
+            return -1;
+        }
+
+        $paynet_order_id            = $_REQUEST['orderid'];
+        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
+
+        if(empty($transaction_id))
+        {
+            $this->error('Detect callback using with wrong "orderid" = '.$paynet_order_id);
+        }
+
+        $this->log('Detect callback using with CORRECT "orderid" = '.$paynet_order_id);
+
+        // 1. Init transaction
+        $transaction                = new PaymentTransaction($transaction_id);
+        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
+
+        // notice
+        $transaction->get_order()->add_order_note
+        (
+            __('CALLBACK has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
+        );
+
+        // 2. Execute query
+        $payment_processor          = $this->create_payment_processor();
+        $payment_processor->processPaynetEasyCallback
+        (
+            new CallbackResponse($_REQUEST),
+            $transaction
+        );
+
+        // 3. Handle results
+        $transaction->handle_transaction()->save_transaction();
+
+        return 1;
+    }
+
+    /**
+     * Handler for redirect (customer return to site) from PaynetEasy
+     *
+     * @return  int
+     *
+     * @throws  \Exception
+     */
+    public function on_redirect()
+    {
+        // try to find by $paynet_order_id
+        if(empty($_REQUEST['orderid']))
+        {
+            $this->log('Detect redirect_url using with empty "orderid"');
+            return -1;
+        }
+
+        $paynet_order_id            = $_REQUEST['orderid'];
+        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
+
+        if(empty($transaction_id))
+        {
+            $this->error('Detect redirect_url using with wrong "orderid" = '.$paynet_order_id);
+            return -2;
+        }
+
+        $this->log('Detect redirect_url using with CORRECT "orderid" = '.$paynet_order_id);
+
+        // 1. Init transaction
+        $transaction                = new PaymentTransaction($transaction_id);
+        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
+
+        // notice
+        $transaction->get_order()->add_order_note
+        (
+            __('REDIRECT has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
+        );
+
+        // 2. Execute query
+        $payment_processor          = $this->create_payment_processor();
+        $payment_processor->processCustomerReturn
+        (
+            new CallbackResponse($_REQUEST),
+            $transaction
+        );
+
+        // 3. Handle results
+        $transaction->handle_transaction()->save_transaction();
+
+        $redirect               = $this->define_redirect_for_transaction($transaction);
+
+        if($redirect !== null)
+        {
+            wp_redirect($redirect);
+        }
+
+        return 1;
+    }
+
     public function process_refund($order_id, $amount = null, $reason = '')
     {
         return parent::process_refund($order_id, $amount, $reason); // TODO: Change the autogenerated stub
@@ -339,240 +358,9 @@ class Gateway                       extends \WC_Payment_Gateway
         parent::saved_payment_methods(); // TODO: Change the autogenerated stub
     }
 
-
     /**
-     * Initialize Gateway Settings form fields
-     *
-     * @access public
-     * @return void
-     */
-    public function init_form_fields()
-    {
-        $this->form_fields          = [
-
-            'enabled'               => [
-                'title'             => __('Enable/Disable', 'paynet-easy-gateway'),
-                'label'             => __('Enable', 'paynet-easy-gateway'),
-                'type'              => 'checkbox',
-                'description'       => '',
-                'default'           => 'no',
-            ],
-            'title'                 => [
-                'title'             => __('Title', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('This controls the title which the user sees during checkout.', 'paynet-easy-gateway'),
-                'default'           => __('Credit Card', 'paynet-easy-gateway'),
-            ],
-            'description'           => [
-                'title'             => __('Description', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __( 'This controls the description which the user sees during checkout.', 'paynet-easy-gateway'),
-                'default'           => 'Pay securely using your credit card.',
-            ],
-            'test_mode'             => [
-                'title'             => __( 'Sandbox test mode', 'paynet-easy-gateway' ),
-                'label'             => __( 'Enable sandbox test mode', 'paynet-easy-gateway' ),
-                'type'              => 'checkbox',
-                'description'       => __( 'Place the payment gateway in development mode.', 'paynet-easy-gateway' ),
-                'default'           => 'no',
-            ],
-            'debug_mode'            => [
-                'title'             => __( 'Debug Mode', 'paynet-easy-gateway' ),
-                'type'              => 'select',
-                'desc_tip'          => __( 'Show Detailed Error Messages and API requests / responses on the checkout page.', 'paynet-easy-gateway' ),
-                'default'           => 'off',
-                'options'           => [
-                    'off'           => __( 'Off', 'paynet-easy-gateway' ),
-                    'on'            => __( 'On', 'paynet-easy-gateway' ),
-                ],
-            ],
-            'log_level_severity'    => [
-                'title'             => __('Log level', 'paynet-easy-gateway' ),
-                'type'              => 'select',
-                'class'             => 'select',
-                'default'           => 500,
-                'options'           => [
-                    800             => 'EMERGENCY',
-                    700             => 'ALERT',
-                    600             => 'CRITICAL',
-                    500             => 'ERROR',
-                    400             => 'WARNING',
-                    300             => 'NOTICE',
-                    200             => 'INFO',
-                    100             => 'DEBUG',
-                ],
-            ],
-            'payment_method'        => [
-                'title'             => __('Payment Method', 'paynet-easy-gateway'),
-                'type'              => 'select',
-                'class'             => 'select',
-                'default'           => 'sale',
-                'description'       => __( 'Payment method description', 'paynet-easy-gateway'),
-                'options'           => [
-                    'sale'          => '3DSecure',
-                    'sale_form'     => 'Form'
-                ]
-            ],
-            'end_point'             => [
-                'title'             => __('End point', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('The End point ID is an entry point for incoming Merchant’s transactions for single currency integration', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'end_point_group'       => [
-                'title'             => __('End point group', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'login'                 => [
-                'title'             => __('Login', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Merchant login name', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'merchant_control'      => [
-                'title'             => __('Control Key', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Merchant control string for sign', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'gateway_url'           => [
-                'title'             => __('Gateway url', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Url for gateway', 'paynet-easy-gateway'),
-                'default'           => 'https://payneteasy.com/paynet/api/v2/'
-            ],
-            // test data
-            'sandbox_end_point'     => [
-                'title'             => __('Sandbox End point', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('The End point ID is an entry point for incoming Merchant’s transactions for single currency integration', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'sandbox_end_point_group' => [
-                'title'             => __('Sandbox End point group', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'sandbox_login'         => [
-                'title'             => __('Sandbox Login', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Merchant login name', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'sandbox_merchant_control' => [
-                'title'             => __('Sandbox Control Key', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Merchant control string for sign', 'paynet-easy-gateway'),
-                'default'           => '',
-                'css'               => 'width: 400px',
-            ],
-            'gateway_url_sandbox'   => [
-                'title'             => __('Gateway url sandbox', 'paynet-easy-gateway'),
-                'type'              => 'text',
-                'description'       => __('Url for gateway sandbox', 'paynet-easy-gateway'),
-                'default'           => 'https://payneteasy.com/paynet/api/v2/'
-            ]
-        ];
-    }
-
-    public function payment_fields()
-    {
-        // you can instructions for test mode, I mean test card numbers etc.
-        if ($this->is_sandbox_mode())
-        {
-            // let's display some description before the payment form
-            if (empty($this->description))
-            {
-                $this->description = '';
-            }
-
-            $this->description .= ' <br/> <strong style="color: red">SANDBOX MODE ENABLED!</strong> ';
-            $this->description .= ' (In test mode, you can use the card numbers listed in ';
-            $this->description .= '<a href="http://doc.payneteasy.com/" target="_blank">documentation</a>)';
-            $this->description  = trim($this->description);
-        }
-
-        // let's display some description before the payment form
-        if (!empty($this->description))
-        {
-            // display the description with <p> tags etc.
-            echo wpautop(wp_kses_post($this->description));
-        }
-
-        // I will echo() the form, but you can close PHP tags and print it directly in HTML
-        echo '<fieldset id="wc-' . esc_attr($this->id) . '-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">';
-
-        // Add this action hook if you want your custom gateway to support it
-        do_action('woocommerce_credit_card_form_start', $this->id);
-
-        $card_number                = __('Card Number', 'paynet-easy-gateway');
-        $printed_name               = __('Printed name', 'paynet-easy-gateway');
-        $expiry_month               = __('Expiry month', 'paynet-easy-gateway');
-        $expiry_year                = __('Expiry year', 'paynet-easy-gateway');
-        $cvv2                       = __('Card Code (CVC)', 'paynet-easy-gateway');
-
-        $card_number_value          = '';
-        $printed_name_value         = '';
-        $expiry_month_value         = '';
-        $expiry_year_value          = '';
-        $cvv2_value                 = '';
-
-        if($this->is_sandbox_mode())
-        {
-            // test data
-            $card_number_value      = '4444555566661111';
-            $printed_name_value     = 'Test Name';
-            $expiry_month_value     = rand(1, 12);
-            $current_year           = (int)date('y');
-            $expiry_year_value      = rand($current_year + 1, $current_year + 10);
-            $cvv2_value             = '123';
-        }
-
-        echo <<<EOD
-<div class="form-row form-row-wide">
-  <label>$card_number <span class="required">*</span></label>
-  <input name="credit_card_number" value="$card_number_value" type="text" autocomplete="off">
-</div>
-<div class="form-row form-row-wide">
-  <label>$printed_name <span class="required">*</span></label>
-  <input name="card_printed_name" value="$printed_name_value" type="text" autocomplete="off" placeholder="$printed_name">
-</div>		
-<div class="form-row form-row-first">
-    <label>$expiry_month <span class="required">*</span></label>
-    <input name="expire_month" value="$expiry_month_value" type="text" autocomplete="off" placeholder="MM">
-</div>
-<div class="form-row form-row-last">
-    <label>$expiry_year <span class="required">*</span></label>
-    <input name="expire_year" value="$expiry_year_value" type="text" autocomplete="off" placeholder="YY">
-</div>
-<div class="form-row form-row-first" style="text-align: right">
-  <img src="{$this->image_url('cvv-caption_new.png')}" style="height: 80px">
-</div>
-<div class="form-row form-row-last">
-    <label>$cvv2 <span class="required">*</span></label>
-    <input name="cvv2" value="$cvv2_value" type="password" autocomplete="off" placeholder="CVV">
-</div>
-<div class="clear"></div>
-EOD;
-
-        do_action('woocommerce_credit_card_form_end', $this->id);
-
-        echo '<div class="clear"></div></fieldset>';
-    }
-
-    /**
-     * Обработчик для сохранения транзакции
      * Saving transaction handler
+     * (in this case only save response in the transaction)
      *
      * @param PaymentTransaction $transaction
      * @param Response $response
@@ -583,8 +371,6 @@ EOD;
         {
             $transaction->set_response($response);
         }
-
-        $transaction->save_transaction();
     }
 
     /**
@@ -603,8 +389,10 @@ EOD;
     }
 
     /**
-     * @param string $order_id
-     * @return string
+     * Define a payment method: sale or form
+     *
+     * @param       string      $order_id
+     * @return      string
      */
     protected function define_payment_method($order_id = null)
     {
@@ -741,7 +529,7 @@ EOD;
 
     protected function is_sandbox_mode()
     {
-        return !empty($this->settings['test_mode']);
+        return !empty($this->settings['test_mode']) && $this->settings['test_mode'] === 'yes';
     }
 
     protected function get_gateway_mode()
@@ -756,7 +544,7 @@ EOD;
      * @param       string          $level
      * @return      $this
      */
-    protected function log($message, $level = \WC_Log_Levels::NOTICE)
+    public function log($message, $level = \WC_Log_Levels::NOTICE)
     {
         // Filter by error level
         if(\WC_Log_Levels::get_level_severity($level) < $this->log_level_severity)
@@ -774,13 +562,236 @@ EOD;
         return $this;
     }
 
-    protected function debug($message)
+    public function debug($message)
     {
         return $this->log($message, \WC_Log_Levels::DEBUG);
     }
 
-    protected function error($message)
+    public function error($message)
     {
         return $this->log($message, \WC_Log_Levels::ERROR);
+    }
+
+    /**
+     * Initialize Gateway Settings form fields
+     *
+     * @access public
+     * @return void
+     */
+    public function init_form_fields()
+    {
+        $this->form_fields          = [
+
+            'enabled'               => [
+                'title'             => __('Enable/Disable', 'paynet-easy-gateway'),
+                'label'             => __('Enable', 'paynet-easy-gateway'),
+                'type'              => 'checkbox',
+                'description'       => '',
+                'default'           => 'no',
+            ],
+            'title'                 => [
+                'title'             => __('Title', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('This controls the title which the user sees during checkout.', 'paynet-easy-gateway'),
+                'default'           => __('Credit Card', 'paynet-easy-gateway'),
+            ],
+            'description'           => [
+                'title'             => __('Description', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __( 'This controls the description which the user sees during checkout.', 'paynet-easy-gateway'),
+                'default'           => 'Pay securely using your credit card.',
+            ],
+            'test_mode'             => [
+                'title'             => __( 'Sandbox test mode', 'paynet-easy-gateway' ),
+                'label'             => __( 'Enable sandbox test mode', 'paynet-easy-gateway' ),
+                'type'              => 'checkbox',
+                'description'       => __( 'Place the payment gateway in development mode.', 'paynet-easy-gateway' ),
+                'default'           => 'no',
+            ],
+            'log_level_severity'    => [
+                'title'             => __('Log level', 'paynet-easy-gateway' ),
+                'type'              => 'select',
+                'class'             => 'select',
+                'default'           => 500,
+                'options'           => [
+                    800             => 'EMERGENCY',
+                    700             => 'ALERT',
+                    600             => 'CRITICAL',
+                    500             => 'ERROR',
+                    400             => 'WARNING',
+                    300             => 'NOTICE',
+                    200             => 'INFO',
+                    100             => 'DEBUG',
+                ],
+            ],
+            'payment_method'        => [
+                'title'             => __('Payment Method', 'paynet-easy-gateway'),
+                'type'              => 'select',
+                'class'             => 'select',
+                'default'           => 'sale',
+                'description'       => __( 'Payment method description', 'paynet-easy-gateway'),
+                'options'           => [
+                    'sale'          => '3DSecure',
+                    'sale_form'     => 'Form'
+                ]
+            ],
+            'end_point'             => [
+                'title'             => __('End point', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('The End point ID is an entry point for incoming Merchant’s transactions for single currency integration', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'end_point_group'       => [
+                'title'             => __('End point group', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'login'                 => [
+                'title'             => __('Login', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Merchant login name', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'merchant_control'      => [
+                'title'             => __('Control Key', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Merchant control string for sign', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'gateway_url'           => [
+                'title'             => __('Gateway url', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Url for gateway', 'paynet-easy-gateway'),
+                'default'           => 'https://payneteasy.com/paynet/api/v2/'
+            ],
+            // test data
+            'sandbox_end_point'     => [
+                'title'             => __('Sandbox End point', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('The End point ID is an entry point for incoming Merchant’s transactions for single currency integration', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'sandbox_end_point_group' => [
+                'title'             => __('Sandbox End point group', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'sandbox_login'         => [
+                'title'             => __('Sandbox Login', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Merchant login name', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'sandbox_merchant_control' => [
+                'title'             => __('Sandbox Control Key', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Merchant control string for sign', 'paynet-easy-gateway'),
+                'default'           => '',
+                'css'               => 'width: 400px',
+            ],
+            'gateway_url_sandbox'   => [
+                'title'             => __('Gateway url sandbox', 'paynet-easy-gateway'),
+                'type'              => 'text',
+                'description'       => __('Url for gateway sandbox', 'paynet-easy-gateway'),
+                'default'           => 'https://payneteasy.com/paynet/api/v2/'
+            ]
+        ];
+    }
+
+    /**
+     * Generate payment fields
+     */
+    public function payment_fields()
+    {
+        // you can instructions for test mode, I mean test card numbers etc.
+        if ($this->is_sandbox_mode())
+        {
+            // let's display some description before the payment form
+            if (empty($this->description))
+            {
+                $this->description = '';
+            }
+
+            $this->description .= ' <br/> <strong style="color: red">SANDBOX MODE ENABLED!</strong> ';
+            $this->description .= ' (In test mode, you can use the card numbers listed in ';
+            $this->description .= '<a href="http://doc.payneteasy.com/" target="_blank">documentation</a>)';
+            $this->description  = trim($this->description);
+        }
+
+        // let's display some description before the payment form
+        if (!empty($this->description))
+        {
+            // display the description with <p> tags etc.
+            echo wpautop(wp_kses_post($this->description));
+        }
+
+        // I will echo() the form, but you can close PHP tags and print it directly in HTML
+        echo '<fieldset id="wc-' . esc_attr($this->id) . '-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">';
+
+        // Add this action hook if you want your custom gateway to support it
+        do_action('woocommerce_credit_card_form_start', $this->id);
+
+        $card_number                = __('Card Number', 'paynet-easy-gateway');
+        $printed_name               = __('Printed name', 'paynet-easy-gateway');
+        $expiry_month               = __('Expiry month', 'paynet-easy-gateway');
+        $expiry_year                = __('Expiry year', 'paynet-easy-gateway');
+        $cvv2                       = __('Card Code (CVC)', 'paynet-easy-gateway');
+
+        $card_number_value          = '';
+        $printed_name_value         = '';
+        $expiry_month_value         = '';
+        $expiry_year_value          = '';
+        $cvv2_value                 = '';
+
+        if($this->is_sandbox_mode())
+        {
+            // test data
+            $card_number_value      = '4444555566661111';
+            $printed_name_value     = 'Test Name';
+            $expiry_month_value     = rand(1, 12);
+            $current_year           = (int)date('y');
+            $expiry_year_value      = rand($current_year + 1, $current_year + 10);
+            $cvv2_value             = '123';
+        }
+
+        echo <<<EOD
+<div class="form-row form-row-wide">
+  <label>$card_number <span class="required">*</span></label>
+  <input name="credit_card_number" value="$card_number_value" type="text" autocomplete="off">
+</div>
+<div class="form-row form-row-wide">
+  <label>$printed_name <span class="required">*</span></label>
+  <input name="card_printed_name" value="$printed_name_value" type="text" autocomplete="off" placeholder="$printed_name">
+</div>		
+<div class="form-row form-row-first">
+    <label>$expiry_month <span class="required">*</span></label>
+    <input name="expire_month" value="$expiry_month_value" type="text" autocomplete="off" placeholder="MM">
+</div>
+<div class="form-row form-row-last">
+    <label>$expiry_year <span class="required">*</span></label>
+    <input name="expire_year" value="$expiry_year_value" type="text" autocomplete="off" placeholder="YY">
+</div>
+<div class="form-row form-row-first" style="text-align: right">
+  <img src="{$this->image_url('cvv-caption_new.png')}" style="height: 80px">
+</div>
+<div class="form-row form-row-last">
+    <label>$cvv2 <span class="required">*</span></label>
+    <input name="cvv2" value="$cvv2_value" type="password" autocomplete="off" placeholder="CVV">
+</div>
+<div class="clear"></div>
+EOD;
+
+        do_action('woocommerce_credit_card_form_end', $this->id);
+
+        echo '<div class="clear"></div></fieldset>';
     }
 }

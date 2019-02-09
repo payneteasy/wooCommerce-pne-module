@@ -9,13 +9,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2019-02-07T13:45:11+00:00\n"
+"POT-Creation-Date: 2019-02-09T06:45:12+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.1.0\n"
 "X-Domain: paynet-easy-gateway\n"
 
 #. Plugin Name of the plugin
-#: PaynetEasy/WoocommerceGateway/Gateway.php:31
+#: PaynetEasy/WoocommerceGateway/Gateway.php:33
 msgid "PaynetEasy Gateway"
 msgstr ""
 
@@ -35,211 +35,201 @@ msgstr ""
 msgid "https://payneteasy.com/"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:26
+#: PaynetEasy/WoocommerceGateway/Gateway.php:27
 msgid "Visa Mastercard"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:33
+#: PaynetEasy/WoocommerceGateway/Gateway.php:35
 msgid "PaynetEasy Gateway for Visa and Mastercard"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:147
-msgid "CALLBACK has been received"
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:197
-msgid "REDIRECT has been received"
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:227
-#: PaynetEasy/WoocommerceGateway/Gateway.php:519
+#: PaynetEasy/WoocommerceGateway/Gateway.php:136
+#: PaynetEasy/WoocommerceGateway/Gateway.php:766
 msgid "Printed name"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:228
+#: PaynetEasy/WoocommerceGateway/Gateway.php:137
 msgid "Card number"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:229
+#: PaynetEasy/WoocommerceGateway/Gateway.php:138
 msgid "Expire month"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:230
+#: PaynetEasy/WoocommerceGateway/Gateway.php:139
 msgid "Expire year"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:231
+#: PaynetEasy/WoocommerceGateway/Gateway.php:140
 msgid "Cvv"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:241
+#. Translators: %s is field name
+#: PaynetEasy/WoocommerceGateway/Gateway.php:151
 msgid "Required \"%s\" field"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:354
+#: PaynetEasy/WoocommerceGateway/Gateway.php:278
+msgid "CALLBACK has been received"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:329
+msgid "REDIRECT has been received"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:588
 msgid "Enable/Disable"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:355
+#: PaynetEasy/WoocommerceGateway/Gateway.php:589
 msgid "Enable"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:361
+#: PaynetEasy/WoocommerceGateway/Gateway.php:595
 msgid "Title"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:363
+#: PaynetEasy/WoocommerceGateway/Gateway.php:597
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:364
+#: PaynetEasy/WoocommerceGateway/Gateway.php:598
 msgid "Credit Card"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:367
+#: PaynetEasy/WoocommerceGateway/Gateway.php:601
 msgid "Description"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:369
+#: PaynetEasy/WoocommerceGateway/Gateway.php:603
 msgid "This controls the description which the user sees during checkout."
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:373
+#: PaynetEasy/WoocommerceGateway/Gateway.php:607
 msgid "Sandbox test mode"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:374
+#: PaynetEasy/WoocommerceGateway/Gateway.php:608
 msgid "Enable sandbox test mode"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:376
+#: PaynetEasy/WoocommerceGateway/Gateway.php:610
 msgid "Place the payment gateway in development mode."
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:380
-msgid "Debug Mode"
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:382
-msgid "Show Detailed Error Messages and API requests / responses on the checkout page."
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:385
-msgid "Off"
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:386
-msgid "On"
-msgstr ""
-
-#: PaynetEasy/WoocommerceGateway/Gateway.php:390
+#: PaynetEasy/WoocommerceGateway/Gateway.php:614
 msgid "Log level"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:406
+#: PaynetEasy/WoocommerceGateway/Gateway.php:630
 msgid "Payment Method"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:410
+#: PaynetEasy/WoocommerceGateway/Gateway.php:634
 msgid "Payment method description"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:417
+#: PaynetEasy/WoocommerceGateway/Gateway.php:641
 msgid "End point"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:419
-#: PaynetEasy/WoocommerceGateway/Gateway.php:454
+#: PaynetEasy/WoocommerceGateway/Gateway.php:643
+#: PaynetEasy/WoocommerceGateway/Gateway.php:678
 msgid "The End point ID is an entry point for incoming Merchant’s transactions for single currency integration"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:424
+#: PaynetEasy/WoocommerceGateway/Gateway.php:648
 msgid "End point group"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:426
-#: PaynetEasy/WoocommerceGateway/Gateway.php:461
+#: PaynetEasy/WoocommerceGateway/Gateway.php:650
+#: PaynetEasy/WoocommerceGateway/Gateway.php:685
 msgid "The End point group ID is an entry point for incoming Merchant’s transactions for multi currency integration"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:431
+#: PaynetEasy/WoocommerceGateway/Gateway.php:655
 msgid "Login"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:433
-#: PaynetEasy/WoocommerceGateway/Gateway.php:468
+#: PaynetEasy/WoocommerceGateway/Gateway.php:657
+#: PaynetEasy/WoocommerceGateway/Gateway.php:692
 msgid "Merchant login name"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:438
+#: PaynetEasy/WoocommerceGateway/Gateway.php:662
 msgid "Control Key"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:440
-#: PaynetEasy/WoocommerceGateway/Gateway.php:475
+#: PaynetEasy/WoocommerceGateway/Gateway.php:664
+#: PaynetEasy/WoocommerceGateway/Gateway.php:699
 msgid "Merchant control string for sign"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:445
+#: PaynetEasy/WoocommerceGateway/Gateway.php:669
 msgid "Gateway url"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:447
+#: PaynetEasy/WoocommerceGateway/Gateway.php:671
 msgid "Url for gateway"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:452
+#: PaynetEasy/WoocommerceGateway/Gateway.php:676
 msgid "Sandbox End point"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:459
+#: PaynetEasy/WoocommerceGateway/Gateway.php:683
 msgid "Sandbox End point group"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:466
+#: PaynetEasy/WoocommerceGateway/Gateway.php:690
 msgid "Sandbox Login"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:473
+#: PaynetEasy/WoocommerceGateway/Gateway.php:697
 msgid "Sandbox Control Key"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:480
+#: PaynetEasy/WoocommerceGateway/Gateway.php:704
 msgid "Gateway url sandbox"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:482
+#: PaynetEasy/WoocommerceGateway/Gateway.php:706
 msgid "Url for gateway sandbox"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:518
+#: PaynetEasy/WoocommerceGateway/Gateway.php:741
+msgid "You will be redirected to a secure site for entering credit card information."
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:765
 msgid "Card Number"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:520
+#: PaynetEasy/WoocommerceGateway/Gateway.php:767
 msgid "Expiry month"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:521
+#: PaynetEasy/WoocommerceGateway/Gateway.php:768
 msgid "Expiry year"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:522
+#: PaynetEasy/WoocommerceGateway/Gateway.php:769
 msgid "Card Code (CVC)"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:255
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:259
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:263
+#. Translators: It's status for order notes
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:297
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:301
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:305
 msgid "Payment processing"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:273
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:315
 msgid "Payment approved"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:297
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:298
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:339
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:340
 msgid "Payment declined"
 msgstr ""
 

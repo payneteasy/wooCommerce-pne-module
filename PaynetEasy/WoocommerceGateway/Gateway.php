@@ -147,6 +147,7 @@ class Gateway                       extends     \WC_Payment_Gateway
             if(empty($_REQUEST[$name]) || empty(trim($_REQUEST[$name])))
             {
                 $no_errors          = true;
+                /* Translators: %s is field name */
                 wc_add_notice(sprintf( __( 'Required "%s" field', 'paynet-easy-gateway'), $title), 'error');
             }
         }

@@ -293,6 +293,7 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
 
         if(empty($action) || $action === Response::NEEDED_STATUS_UPDATE)
         {
+            /* Translators: It's status for order notes */
             $this->order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': wait');
         }
         elseif($action === Response::NEEDED_SHOW_HTML)
@@ -446,7 +447,11 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
     }
 
     /**
+     * Define credit card data
+     *
      * @return array
+     *
+     * @throws \Exception
      */
     protected function define_credit_card()
     {

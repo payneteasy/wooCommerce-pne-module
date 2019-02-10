@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2019-02-09T06:45:12+00:00\n"
+"POT-Creation-Date: 2019-02-10T06:53:57+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.1.0\n"
 "X-Domain: paynet-easy-gateway\n"
@@ -122,11 +122,19 @@ msgid "Log level"
 msgstr ""
 
 #: PaynetEasy/WoocommerceGateway/Gateway.php:630
-msgid "Payment Method"
+msgid "Integration Method"
 msgstr ""
 
 #: PaynetEasy/WoocommerceGateway/Gateway.php:634
-msgid "Payment method description"
+msgid "Accepting payment details and all this stuff is completely implemented on the PaynetEasy gateway side"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:636
+msgid "Inline form"
+msgstr ""
+
+#: PaynetEasy/WoocommerceGateway/Gateway.php:637
+msgid "Remote form"
 msgstr ""
 
 #: PaynetEasy/WoocommerceGateway/Gateway.php:641
@@ -218,18 +226,18 @@ msgid "Card Code (CVC)"
 msgstr ""
 
 #. Translators: It's status for order notes
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:297
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:301
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:305
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:328
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:332
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:336
 msgid "Payment processing"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:315
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:346
 msgid "Payment approved"
 msgstr ""
 
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:339
-#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:340
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:370
+#: PaynetEasy/WoocommerceGateway/PaymentTransaction.php:371
 msgid "Payment declined"
 msgstr ""
 

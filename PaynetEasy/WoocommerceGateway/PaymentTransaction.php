@@ -41,9 +41,17 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
      */
     protected $transaction_id;
     /**
+     * sale,reversal,capture,preauth
+     *
      * @var string
      */
-    protected $payment_method;
+    protected $transaction_type;
+    /**
+     * inline, form
+     *
+     * @var string
+     */
+    protected $integration_method;
     /**
      * @var string
      */
@@ -99,11 +107,18 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
      *
      * @param       string          $transaction_id
      * @param       string          $order_id
-     * @param       string          $payment_method
+     * @param       string          $integration_method
+     * @param       string          $transaction_type
      *
      * @throws      \Exception
      */
-    public function __construct($transaction_id = null, $order_id = null, $payment_method = null)
+    public function __construct
+    (
+        $transaction_id             = null,
+        $order_id                   = null,
+        $integration_method         = null,
+        $transaction_type           = self::SALE
+    )
     {
         global $wpdb;
 
@@ -115,7 +130,8 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
         $this->state                = self::STATE_NEW;
         $this->transaction_id       = $transaction_id;
         $this->order_id             = $order_id;
-        $this->payment_method       = $payment_method;
+        $this->integration_method   = $integration_method;
+        $this->transaction_type     = $transaction_type;
         $this->response             = null;
 
         // try to find exists transaction by order id
@@ -153,9 +169,9 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
      *
      * @return string|null
      */
-    public function get_payment_method()
+    public function get_integration_method()
     {
-        return $this->payment_method;
+        return $this->integration_method;
     }
 
     /**
@@ -163,9 +179,24 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
      *
      * @return bool
      */
-    public function is_inline_payment_method()
+    public function is_inline_integration()
     {
-        return $this->payment_method === 'sale';
+        return $this->integration_method === self::METHOD_INLINE;
+    }
+
+    public function define_payment_method()
+    {
+        if($this->is_inline_integration())
+        {
+            return $this->transaction_type;
+        }
+
+        return $this->transaction_type.'-'.$this->integration_method;
+    }
+
+    public function define_operation()
+    {
+        return 'sale';
     }
 
     public function get_html_for_show()
@@ -293,6 +324,7 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
 
         if(empty($action) || $action === Response::NEEDED_STATUS_UPDATE)
         {
+            /* Translators: It's status for order notes */
             $this->order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': wait');
         }
         elseif($action === Response::NEEDED_SHOW_HTML)
@@ -400,7 +432,7 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
             'billing_address'       =>  new BillingAddress($billing_address)
         ];
 
-        if($this->is_inline_payment_method())
+        if($this->is_inline_integration())
         {
             $data['credit_card']    = new CreditCard($this->define_credit_card());
         }
@@ -446,7 +478,11 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
     }
 
     /**
+     * Define credit card data
+     *
      * @return array
+     *
+     * @throws \Exception
      */
     protected function define_credit_card()
     {
@@ -622,7 +658,8 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
         $this->status               = $result['status'];
         $this->state                = $result['state'];
         $this->html                 = $result['html'];
-        $this->payment_method       = $result['payment_method'];
+        $this->integration_method   = $result['integration_method'];
+        $this->transaction_type     = $result['transaction_type'];
 
         // restore payment data
         if(!empty($result['paynet_order_id']))
@@ -656,8 +693,10 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
             'transaction_id'        => $this->transaction_id ?? 0,
             'order_id'              => $this->order_id,
             'mode'                  => $this->queryConfig->getGatewayMode(),
-            'operation'             => '',
-            'payment_method'        => $this->get_payment_method(),
+            'operation'             => $this->define_operation(),
+            'integration_method'    => $this->integration_method,
+            'transaction_type'      => $this->transaction_type,
+            'payment_method'        => $this->define_payment_method(),
             'state'                 => $this->state,
             'status'                => $this->status,
             'html'                  => '',

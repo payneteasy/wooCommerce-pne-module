@@ -71,7 +71,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         }
 
         // has fields mode is on only for Credit Card
-        $this->has_fields           = $this->define_payment_method() === 'sale';
+        $this->has_fields           = $this->define_integration_method() === PaymentTransaction::METHOD_INLINE;
 
         // This action hook saves the settings
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options'] );
@@ -124,7 +124,7 @@ class Gateway                       extends     \WC_Payment_Gateway
     public function validate_fields()
     {
         // Checking data only for sale (credit card inline form)
-        if($this->define_payment_method() !== 'sale')
+        if($this->define_integration_method() !== PaymentTransaction::METHOD_INLINE)
         {
             return true;
         }
@@ -173,7 +173,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         $transaction                = new PaymentTransaction
         (PaymentTransaction::NEW_TRANSACTION,
             $order_id,
-            $this->define_payment_method($order_id)
+            $this->define_integration_method($order_id)
         );
 
         $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
@@ -187,7 +187,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         else
         {
             $this->debug($order_id.": Start process transaction {$transaction->transaction_id()}");
-            $payment_processor->executeQuery($transaction->get_payment_method(), $transaction);
+            $payment_processor->executeQuery($transaction->define_payment_method(), $transaction);
         }
 
         $transaction->handle_transaction()->save_transaction();
@@ -396,11 +396,11 @@ class Gateway                       extends     \WC_Payment_Gateway
      * @param       string      $order_id
      * @return      string
      */
-    protected function define_payment_method($order_id = null)
+    protected function define_integration_method($order_id = null)
     {
-        if(!empty($this->settings['payment_method']))
+        if(!empty($this->settings['integration_method']))
         {
-            return $this->settings['payment_method'];
+            return $this->settings['integration_method'];
         }
 
         // default payment method
@@ -626,15 +626,15 @@ class Gateway                       extends     \WC_Payment_Gateway
                     100             => 'DEBUG',
                 ],
             ],
-            'payment_method'        => [
-                'title'             => __('Payment Method', 'paynet-easy-gateway'),
+            'integration_method'    => [
+                'title'             => __('Integration Method', 'paynet-easy-gateway'),
                 'type'              => 'select',
                 'class'             => 'select',
                 'default'           => 'sale',
-                'description'       => __( 'Payment method description', 'paynet-easy-gateway'),
+                'description'       => __( 'Accepting payment details and all this stuff is completely implemented on the PaynetEasy gateway side', 'paynet-easy-gateway'),
                 'options'           => [
-                    'sale'          => 'Inline form',
-                    'sale_form'     => 'Form'
+                    'inline'        => __('Inline form', 'paynet-easy-gateway'),
+                    'form'          => __('Remote form', 'paynet-easy-gateway')
                 ]
             ],
             'end_point'             => [
@@ -731,7 +731,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         }
 
         // add to description form instruction
-        if($this->define_payment_method() === 'sale_form')
+        if($this->define_integration_method() === PaymentTransaction::METHOD_FORM)
         {
             if(!is_string($this->description))
             {

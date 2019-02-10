@@ -48,6 +48,32 @@ class PaymentTransaction extends Data
     const STATUS_ERROR      = 'error';
 
     /**
+     * Transaction type: sale
+     */
+    const SALE              = 'sale';
+    /**
+     * Transaction type: reversal
+     */
+    const REVERSAL          = 'reversal';
+    /**
+     * Transaction type: capture
+     */
+    const CAPTURE           = 'capture';
+    /**
+     * Transaction type: preauth
+     */
+    const PREAUTH           = 'preauth';
+
+    /**
+     * integration method: inline form
+     */
+    const METHOD_INLINE     = 'inline';
+    /**
+     * integration method: payneteasy form
+     */
+    const METHOD_FORM       = 'form';
+
+    /**
      * All allowed callback types
      *
      * @var array

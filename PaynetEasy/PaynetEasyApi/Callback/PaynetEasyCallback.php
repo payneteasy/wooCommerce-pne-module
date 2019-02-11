@@ -15,7 +15,7 @@ class PaynetEasyCallback extends AbstractCallback
         array('orderid',        'payment.paynetId'),
         array('merchant_order', 'payment.clientId'),
         array('client_orderid', 'payment.clientId'),
-        array('amount',         'payment.amount'),
+        //array('amount',         'payment.amount'),
         array('status',          null),
         array('type',            null),
         array('control',         null)
@@ -37,10 +37,12 @@ class PaynetEasyCallback extends AbstractCallback
      */
     protected function validateCallback(PaymentTransaction $paymentTransaction, CallbackResponse $callbackResponse)
     {
+        /*
         if(!$paymentTransaction->isNew())
         {
             throw new ValidationException("Only new payment transaction can be processed");
         }
+        */
 
         parent::validateCallback($paymentTransaction, $callbackResponse);
     }

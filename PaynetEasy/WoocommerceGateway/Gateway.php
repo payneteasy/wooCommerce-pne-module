@@ -271,24 +271,30 @@ class Gateway                       extends     \WC_Payment_Gateway
         // 1. Init transaction
         $transaction                = new PaymentTransaction($transaction_id);
         $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('CALLBACK has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
+        
         // 2. Execute query
+        $response                   = new CallbackResponse($_REQUEST);
         $payment_processor          = $this->create_payment_processor();
         $payment_processor->processPaynetEasyCallback
         (
-            new CallbackResponse($_REQUEST),
+            $response,
             $transaction
         );
-
+        
+        // 3. Translate callback status
+        $status                     = $this->translate_status($response->getStatus());
+        
         // 3. Handle results
         $transaction->handle_transaction()->save_transaction();
-
+    
+        // notice
+        $transaction->get_order()->add_order_note
+        (
+            __('CALLBACK has been received with status', 'paynet-easy-gateway').
+            ': '.$status.
+            ' (paynet id = '.$paynet_order_id.')'
+        );
+        
         return 1;
     }
 
@@ -815,5 +821,24 @@ EOD;
         do_action('woocommerce_credit_card_form_end', $this->id);
 
         echo '<div class="clear"></div></fieldset>';
+    }
+    
+    /**
+     * @param string $status
+     *
+     * @return string
+     */
+    public function translate_status($status)
+    {
+        switch ($status)
+        {
+            case 'approved': return __('approved', 'paynet-easy-gateway');
+            case 'declined': return __('declined', 'paynet-easy-gateway');
+            case 'error':    return __('error', 'paynet-easy-gateway');
+            case 'filtered': return __('filtered', 'paynet-easy-gateway');
+            case 'processing': return __('processing', 'paynet-easy-gateway');
+            case 'unknown': return __('unknown', 'paynet-easy-gateway');
+            default: return $status;
+        }
     }
 }

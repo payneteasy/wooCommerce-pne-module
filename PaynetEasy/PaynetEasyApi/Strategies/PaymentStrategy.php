@@ -3,7 +3,10 @@ namespace PaynetEasy\PaynetEasyApi\Strategies;
 
 use PaynetEasy\PaynetEasyApi\Exception\PaynetIdUndefined;
 use PaynetEasy\PaynetEasyApi\Exception\ResponseException;
-use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFound;
+use PaynetEasy\PaynetEasyApi\Exception\TransactionHasWrongState;
+use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByOrderId;
+use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByPaynetId;
+use PaynetEasy\PaynetEasyApi\PaymentProcessor;
 use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 
@@ -11,7 +14,7 @@ use PaynetEasy\PaynetEasyApi\Transport\Response;
  * Class PaymentStrategy
  * @package PaynetEasy\PaynetEasyApi\Strategies
  */
-abstract class PaymentStrategy
+class PaymentStrategy
 {
     const ACTION_REDIRECT           = 'redirect';
     const ACTION_CALLBACK           = 'callback';
@@ -33,10 +36,36 @@ abstract class PaymentStrategy
      * @var string
      */
     protected $orderId;
+    /**
+     * @var Response
+     */
+    protected $response;
     
-    public function __construct()
+    /**
+     * @var IntegrationInterface
+     */
+    protected $integration;
+    
+    public function __construct(IntegrationInterface $integration = null)
     {
+        if($integration !== null)
+        {
+            $this->assignIntegration($integration);
+        }
+    }
     
+    public function assignIntegration(IntegrationInterface $integration)
+    {
+        $this->integration          = $integration;
+        
+        return $this;
+    }
+    
+    public function assignOrderId($orderId)
+    {
+        $this->orderId              = $orderId;
+        
+        return $this;
     }
     
     public function getPaymentUrlParameter($action)
@@ -93,7 +122,8 @@ abstract class PaymentStrategy
     
     /**
      * @throws PaynetIdUndefined
-     * @throws TransactionNotFound
+     * @throws TransactionNotFoundByOrderId
+     * @throws TransactionNotFoundByPaynetId
      */
     protected function defineCurrentTransaction()
     {
@@ -106,24 +136,74 @@ abstract class PaymentStrategy
                 throw new PaynetIdUndefined($paynetId);
             }
             
-            $transactionId          = $this->findTransactionByPaynetId($paynetId);
+            $this->transaction      = $this->integration->findTransactionByPaynetId($paynetId);
             
-            if(empty($transactionId))
+            if($this->transaction === null)
             {
-                throw new TransactionNotFound($paynetId);
+                throw new TransactionNotFoundByPaynetId($paynetId);
             }
-            
-            $this->initTransaction($transactionId);
             
             return;
         }
         
-        $this->initTransaction();
+        // restore transaction by order
+        if($this->orderId !== null)
+        {
+            $this->transaction      = $this->integration->findTransactionByOrderId($this->orderId);
+    
+            if($this->transaction === null)
+            {
+                throw new TransactionNotFoundByOrderId($this->orderId);
+            }
+        }
+        
+        $this->transaction          = $this->integration->newTransaction();
     }
     
+    /**
+     * @throws TransactionHasWrongState
+     */
     protected function processing()
     {
+        $paymentProcessor           = $this->createPaymentProcessor();
     
+        // check transaction inside callback
+        if($this->callback instanceof CallbackResponse && $this->transaction->getState() === Transaction::STATE_NEW)
+        {
+            throw new TransactionHasWrongState
+            (
+                Transaction::STATE_NEW,
+                'A transaction cannot have a NEW state while the callback from the server is handled'
+            );
+        }
+    
+        switch ($this->action)
+        {
+            case self::ACTION_CALLBACK:
+            {
+                $this->integration->debug($this->orderId.": Detect callback for transaction {$this->transaction->getTransactionId()}");
+                $this->response     = $paymentProcessor->processPaynetEasyCallback($this->callback, $this->transaction);
+                break;
+            }
+            case self::ACTION_REDIRECT:
+            {
+                $this->integration->debug($this->orderId.": Detect redirect for transaction {$this->transaction->getTransactionId()}");
+                $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
+                break;
+            }
+            case $this->transaction->is_processing():
+            {
+                $this->integration->debug($this->orderId.": Update status for transaction {$this->transaction->getTransactionId()}");
+                $this->response     = $paymentProcessor->executeQuery('status', $this->transaction);
+                break;
+            }
+            default:
+            {
+                $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");
+                $this->response     = $paymentProcessor->executeQuery($this->transaction->define_payment_method(), $this->transaction);
+                break;
+            }
+        }
     }
     
     protected function handleTransaction()
@@ -141,6 +221,15 @@ abstract class PaymentStrategy
     
     }
     
-    abstract protected function initTransaction($transactionId = null);
-    abstract protected function findTransactionByPaynetId($paynetId);
+    protected function createPaymentProcessor()
+    {
+        $handlers                   =
+        [
+            PaymentProcessor::HANDLER_SAVE_CHANGES => [$this, 'onSaveTransaction']
+        ];
+        
+        $payment_processor          = new PaymentProcessor($handlers);
+        
+        return $payment_processor;
+    }
 }

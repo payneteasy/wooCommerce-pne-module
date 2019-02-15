@@ -77,7 +77,6 @@ abstract class Transaction          extends PaymentTransaction
      * PaymentTransaction constructor.
      *
      * @param       string $transactionId
-     * @param       string $orderId
      * @param       string $integrationMethod
      * @param       string $transactionType
      *
@@ -86,7 +85,6 @@ abstract class Transaction          extends PaymentTransaction
     public function __construct
     (
         $transactionId             = null,
-        $orderId                   = null,
         $integrationMethod         = null,
         $transactionType           = self::SALE
     )
@@ -95,16 +93,9 @@ abstract class Transaction          extends PaymentTransaction
         
         $this->state                = self::STATE_NEW;
         $this->transactionId        = $transactionId;
-        $this->orderId              = $orderId;
         $this->integrationMethod    = $integrationMethod;
         $this->transactionType      = $transactionType;
         $this->response             = null;
-        
-        // try to find exists transaction by order id
-        if($this->transactionId === null && $orderId !== null)
-        {
-            $this->transactionId    = $this->findTransactionByOrderId($orderId);
-        }
         
         if($this->transactionId !== null)
         {
@@ -114,4 +105,72 @@ abstract class Transaction          extends PaymentTransaction
         $this->definePaymentData();
     }
     
+    public function getTransactionId()
+    {
+        return $this->transactionId;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getOrderId()
+    {
+        return $this->orderId;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getOperation()
+    {
+        return $this->operation;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getTransactionType()
+    {
+        return $this->transactionType;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getIntegrationMethod()
+    {
+        return $this->integrationMethod;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getState()
+    {
+        return $this->state;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getHtml()
+    {
+        return $this->html;
+    }
+    
+    /**
+     * @return Response
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+    
+    /**
+     * @return Transaction
+     */
+    public function getParentTransaction()
+    {
+        return $this->parentTransaction;
+    }
 }

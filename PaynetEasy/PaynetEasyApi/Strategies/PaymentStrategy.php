@@ -177,36 +177,50 @@ class PaymentStrategy
             );
         }
     
-        switch ($this->action)
+        if($this->action === self::ACTION_CALLBACK)
         {
-            case self::ACTION_CALLBACK:
-            {
-                $this->integration->debug($this->orderId.": Detect callback for transaction {$this->transaction->getTransactionId()}");
-                $this->response     = $paymentProcessor->processPaynetEasyCallback($this->callback, $this->transaction);
-                break;
-            }
-            case self::ACTION_REDIRECT:
-            {
-                $this->integration->debug($this->orderId.": Detect redirect for transaction {$this->transaction->getTransactionId()}");
-                $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
-                break;
-            }
-            case $this->transaction->is_processing():
-            {
-                $this->integration->debug($this->orderId.": Update status for transaction {$this->transaction->getTransactionId()}");
-                $this->response     = $paymentProcessor->executeQuery('status', $this->transaction);
-                break;
-            }
-            default:
-            {
-                $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");
-                $this->response     = $paymentProcessor->executeQuery($this->transaction->define_payment_method(), $this->transaction);
-                break;
-            }
+            $this->integration->debug($this->orderId.": Detect callback for transaction {$this->transaction->getTransactionId()}");
+            $this->response     = $paymentProcessor->processPaynetEasyCallback($this->callback, $this->transaction);
+        }
+        elseif ($this->action === self::ACTION_REDIRECT)
+        {
+            $this->integration->debug($this->orderId.": Detect redirect for transaction {$this->transaction->getTransactionId()}");
+            $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
+        }
+        elseif ($this->transaction->isProcessing())
+        {
+            $this->integration->debug($this->orderId.": Update status for transaction {$this->transaction->getTransactionId()}");
+            $this->response     = $paymentProcessor->executeQuery('status', $this->transaction);
+        }
+        else
+        {
+            $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");
+            $this->response     = $paymentProcessor->executeQuery($this->transaction->define_payment_method(), $this->transaction);
         }
     }
     
     protected function handleTransaction()
+    {
+        if($this->transaction->isDeclined() || $this->transaction->isError())
+        {
+            $this->handleError();
+        }
+        elseif($this->transaction->isApproved())
+        {
+            $this->handleApprove();
+        }
+        elseif($this->transaction->isProcessing())
+        {
+            $this->handleProcess();
+        }
+    }
+    
+    protected function handleError()
+    {
+    
+    }
+    
+    protected function handleApprove()
     {
     
     }

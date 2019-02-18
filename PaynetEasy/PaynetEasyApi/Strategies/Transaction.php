@@ -8,7 +8,7 @@ use PaynetEasy\PaynetEasyApi\Transport\Response;
  * Class Transaction
  * @package PaynetEasy\PaynetEasyApi\Strategies
  */
-abstract class Transaction          extends PaymentTransaction
+class Transaction          extends PaymentTransaction
 {
     /**
      * State of handle
@@ -64,50 +64,35 @@ abstract class Transaction          extends PaymentTransaction
     protected $parentTransaction;
     
     /**
-     * @var LoggerInterface
+     * @var IntegrationInterface
      */
-    protected $logger;
-    
-    abstract protected function findTransactionByOrderId($orderId);
-    abstract protected function load();
-    abstract protected function save();
-    abstract protected function definePaymentData();
+    protected $integrator;
     
     /**
-     * PaymentTransaction constructor.
+     * Transaction constructor.
      *
-     * @param       string $transactionId
-     * @param       string $integrationMethod
-     * @param       string $transactionType
-     *
-     * @throws      \Exception
+     * @param   IntegrationInterface      $integrator
      */
-    public function __construct
-    (
-        $transactionId             = null,
-        $integrationMethod         = null,
-        $transactionType           = self::SALE
-    )
+    public function __construct(IntegrationInterface $integrator)
     {
         parent::__construct();
+    
+        $this->integrator           = $integrator;
         
         $this->state                = self::STATE_NEW;
-        $this->transactionId        = $transactionId;
-        $this->integrationMethod    = $integrationMethod;
-        $this->transactionType      = $transactionType;
         $this->response             = null;
-        
-        if($this->transactionId !== null)
-        {
-            $this->load();
-        }
-        
-        $this->definePaymentData();
     }
     
     public function getTransactionId()
     {
         return $this->transactionId;
+    }
+    
+    public function setTransactionId($transactionId)
+    {
+        $this->transactionId        = $transactionId;
+        
+        return $this;
     }
     
     /**
@@ -118,12 +103,26 @@ abstract class Transaction          extends PaymentTransaction
         return $this->orderId;
     }
     
+    public function setOrderId($orderId)
+    {
+        $this->orderId              = $orderId;
+        
+        return $this;
+    }
+    
     /**
      * @return string
      */
     public function getOperation()
     {
         return $this->operation;
+    }
+    
+    public function setOperation($operation)
+    {
+        $this->operation            = $operation;
+        
+        return $this;
     }
     
     /**
@@ -134,12 +133,26 @@ abstract class Transaction          extends PaymentTransaction
         return $this->transactionType;
     }
     
+    public function setTransactionType($transactionType)
+    {
+        $this->transactionType      = $transactionType;
+        
+        return $this;
+    }
+    
     /**
      * @return string
      */
     public function getIntegrationMethod()
     {
         return $this->integrationMethod;
+    }
+    
+    public function setIntegrationMethod($integrationMethod)
+    {
+        $this->integrationMethod    = $integrationMethod;
+        
+        return $this;
     }
     
     /**
@@ -151,11 +164,30 @@ abstract class Transaction          extends PaymentTransaction
     }
     
     /**
+     * @param string $state
+     *
+     * @return $this
+     */
+    public function setState($state)
+    {
+        $this->state                = $state;
+        
+        return $this;
+    }
+    
+    /**
      * @return string
      */
     public function getHtml()
     {
         return $this->html;
+    }
+    
+    public function setHtml($html)
+    {
+        $this->html                 = $html;
+        
+        return $this;
     }
     
     /**
@@ -172,5 +204,35 @@ abstract class Transaction          extends PaymentTransaction
     public function getParentTransaction()
     {
         return $this->parentTransaction;
+    }
+    
+    /**
+     * Returns TRUE is inline method integration
+     *
+     * @return bool
+     */
+    public function isInlineIntegration()
+    {
+        return $this->integrationMethod === self::METHOD_INLINE;
+    }
+    
+    public function definePaymentMethod()
+    {
+        if($this->isInlineIntegration())
+        {
+            return $this->getTransactionType();
+        }
+        
+        return $this->getTransactionType().'-'.$this->getIntegrationMethod();
+    }
+    
+    public function setErrors($errors)
+    {
+        if(is_array($errors))
+        {
+            $this->errors           = $errors;
+        }
+        
+        return $this;
     }
 }

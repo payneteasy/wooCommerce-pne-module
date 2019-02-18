@@ -195,7 +195,7 @@ class PaymentStrategy
         else
         {
             $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");
-            $this->response     = $paymentProcessor->executeQuery($this->transaction->define_payment_method(), $this->transaction);
+            $this->response     = $paymentProcessor->executeQuery($this->transaction->definePaymentMethod(), $this->transaction);
         }
     }
     
@@ -213,16 +213,28 @@ class PaymentStrategy
         {
             $this->handleProcess();
         }
+    
+        // save modifications
+        $this->transaction->save();
     }
     
     protected function handleError()
     {
-    
+        // Done
+        $this->transaction->setState(Transaction::STATE_DONE);
+        $this->integration->debug($this->orderId.": Transaction has error {$this->transaction->getTransactionId()}");
     }
     
     protected function handleApprove()
     {
+        $this->transaction->setState(Transaction::STATE_DONE);
+        $this->integration->debug($this->orderId.": Transaction approved {$this->transaction->getTransactionId()}");
+    }
     
+    protected function handleProcess()
+    {
+        $this->transaction->setState(Transaction::STATE_PROCESSING);
+        $this->integration->debug($this->orderId.": Transaction continue processing {$this->transaction->getTransactionId()}");
     }
     
     protected function outResponse()

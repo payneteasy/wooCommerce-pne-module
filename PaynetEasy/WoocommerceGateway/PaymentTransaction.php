@@ -25,7 +25,7 @@ class PaymentTransaction            extends \PaynetEasy\PaynetEasyApi\PaymentDat
     const STATE_NEW                 = 'new';
     const STATE_PROCESSING          = 'processing';
     const STATE_DONE                = 'done';
-
+    
     /**
      * Table for transactions
      * @var string

@@ -7,6 +7,8 @@ interface IntegrationInterface      extends LoggerInterface
      * @return Transaction
      */
     public function newTransaction();
+    public function saveTransaction(Transaction $transaction);
+    public function definePaymentData(Transaction $transaction);
     
     /**
      * Returns transaction id or null
@@ -16,6 +18,5 @@ interface IntegrationInterface      extends LoggerInterface
      * @return Transaction
      */
     public function findTransactionByPaynetId($paynetId);
-    public function findTransactionByOrderId($orderId);
     public function findTransactionById($transactionId);
 }

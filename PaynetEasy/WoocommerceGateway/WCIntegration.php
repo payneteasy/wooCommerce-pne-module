@@ -5,7 +5,10 @@ use PaynetEasy\PaynetEasyApi\PaymentData\BillingAddress;
 use PaynetEasy\PaynetEasyApi\PaymentData\CreditCard;
 use PaynetEasy\PaynetEasyApi\PaymentData\Customer;
 use PaynetEasy\PaynetEasyApi\PaymentData\Payment;
+use PaynetEasy\PaynetEasyApi\PaymentData\QueryConfig;
 use PaynetEasy\PaynetEasyApi\Strategies\IntegrationInterface;
+use PaynetEasy\PaynetEasyApi\Strategies\LoggerInterface;
+use PaynetEasy\PaynetEasyApi\Strategies\PaymentStrategy;
 use PaynetEasy\PaynetEasyApi\Strategies\Transaction;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 use PaynetEasy\PaynetEasyApi\Util\RegionFinder;
@@ -20,10 +23,38 @@ class WCIntegration                 implements IntegrationInterface
     
     protected $table                = '';
     
-    public function __construct()
+    protected $plugin_id;
+    /**
+     * @var array
+     */
+    protected $settings;
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+    /**
+     * @var PaymentStrategy
+     */
+    protected $payment_strategy;
+    
+    public function __construct($plugin_id, array $settings, LoggerInterface $logger)
     {
         global $wpdb;
         $this->table                = $wpdb->prefix.self::DATABASE_TABLE;
+        
+        $this->plugin_id            = $plugin_id;
+        $this->settings             = $settings;
+        $this->payment_strategy     = new PaymentStrategy($this);
+    }
+    
+    public function processPayment($order_id)
+    {
+        $this->debug($order_id.': Start processing payment');
+        
+        $this->payment_strategy->assignOrderId($order_id);
+        $this->payment_strategy->execute();
+        
+        return $this->payment_strategy->getTransaction();
     }
     
     /**
@@ -51,6 +82,8 @@ class WCIntegration                 implements IntegrationInterface
      */
     protected function initTransaction(Transaction $transaction, array $result)
     {
+        $transaction->setQueryConfig($this->getQueryConfig());
+        
         $transaction->setTransactionId($result['transaction_id'] ?? null);
         $transaction->setOrderId($result['order_id'] ?? null);
         $transaction->setStatus($result['status']);
@@ -288,19 +321,45 @@ class WCIntegration                 implements IntegrationInterface
         return $this->initTransaction(new Transaction($this), $result);
     }
     
+    /**
+     * Find transaction by order id
+     *
+     * @param string $orderId
+     *
+     * @return Transaction|null
+     * @throws \Exception
+     */
+    public function findTransactionByOrderId($orderId)
+    {
+        global $wpdb;
+        
+        $orderId                    = esc_sql($orderId);
+        
+        $query                      = "SELECT * FROM {$this->table} WHERE order_id = '{$orderId}' AND `state` IN ('new','processing')";
+        
+        $result                     = $wpdb->get_row($query, ARRAY_A);
+        
+        if(empty($result))
+        {
+            return null;
+        }
+        
+        return $this->initTransaction(new Transaction($this), $result);
+    }
+    
     public function notice($message)
     {
-        return $GLOBALS['PaynetEasyWoocommerceGateway']->log($message, \WC_Log_Levels::NOTICE);
+        return $this->logger->notice($message);
     }
     
     public function debug($message)
     {
-        return $GLOBALS['PaynetEasyWoocommerceGateway']->log($message, \WC_Log_Levels::DEBUG);
+        return $this->logger->debug($message);
     }
     
     public function error($message)
     {
-        return $GLOBALS['PaynetEasyWoocommerceGateway']->log($message, \WC_Log_Levels::ERROR);
+        return $this->logger->error($message);
     }
     
     /**
@@ -478,5 +537,154 @@ class WCIntegration                 implements IntegrationInterface
         $result                     = json_encode($result, JSON_PRETTY_PRINT);
         
         return $result;
+    }
+    
+    /**
+     * Define a payment method: sale or form
+     *
+     * @param       string      $order_id
+     * @return      string
+     */
+    public function defineIntegrationMethod($order_id = null)
+    {
+        if(!empty($this->settings['integration_method']))
+        {
+            return $this->settings['integration_method'];
+        }
+        
+        // default payment method
+        return 'sale';
+    }
+    
+    /**
+     * @return QueryConfig
+     */
+    public function getQueryConfig()
+    {
+        /**
+         * Точка входа для аккаунта мерчанта, выдается при подключении
+         */
+        $end_point                  = $this->getEndPoint();
+        $end_point_group            = $this->getEndPointGroup();
+        
+        $config                     =
+            [
+                /**
+                 * Логин мерчанта, выдается при подключении
+                 */
+                'login'                 => $this->getPaynetLogin(),
+                /**
+                 * Ключ мерчанта для подписывания запросов, выдается при подключении
+                 */
+                'signing_key'           => $this->getMerchantControl(),
+                /**
+                 * URL на который пользователь будет перенаправлен после окончания запроса
+                 */
+                'redirect_url'          => $this->getRedirectUrl(),
+                /**
+                 * URL на который пользователь будет перенаправлен после окончания запроса
+                 */
+                'callback_url'          => $this->getCallbackUrl(),
+                /**
+                 * Режим работы библиотеки: sandbox, production
+                 */
+                'gateway_mode'          => $this->getGatewayMode(),
+                /**
+                 * Ссылка на шлюз PaynetEasy для режима работы sandbox
+                 */
+                'gateway_url_sandbox'   => $this->settings['gateway_url_sandbox'] ?? null,
+                /**
+                 * Ссылка на шлюз PaynetEasy для режима работы production
+                 */
+                'gateway_url_production' => $this->settings['gateway_url'] ?? ''
+            ];
+        
+        if(!empty($end_point_group))
+        {
+            $config['end_point_group']  = $end_point_group;
+        }
+        else
+        {
+            $config['end_point']        = $end_point;
+        }
+        
+        return new QueryConfig($config);
+    }
+    
+    /**
+     * @return string
+     */
+    public function getEndPoint()
+    {
+        $result                     = $this->isSandboxMode() ?
+            $this->settings['sandbox_end_point'] : $this->settings['end_point'];
+        
+        return $result ?? $this->settings['end_point'];
+    }
+    
+    /**
+     * @return string
+     */
+    public function getEndPointGroup()
+    {
+        $result                     = $this->isSandboxMode() ?
+            $this->settings['sandbox_end_point_group'] : $this->settings['end_point_group'];
+        
+        return $result ?? $this->settings['end_point_group'];
+    }
+    
+    /**
+     * @return string
+     */
+    public function getPaynetLogin()
+    {
+        $result                     = $this->isSandboxMode() ?
+                                    $this->settings['sandbox_login'] : $this->settings['login'];
+        
+        return $result ?? $this->settings['login'];
+    }
+    
+    /**
+     * @return string
+     */
+    public function getMerchantControl()
+    {
+        $result                     = $this->isSandboxMode() ?
+                                    $this->settings['sandbox_merchant_control'] : $this->settings['merchant_control'];
+        
+        return $result ?? $this->settings['merchant_control'];
+    }
+    
+    public function getRedirectUrl()
+    {
+        return add_query_arg(['wc-api' => $this->plugin_id.'_redirect'], home_url('/'));
+    }
+    
+    public function getCallbackUrl()
+    {
+        return add_query_arg(['wc-api' => $this->plugin_id.'_callback'], home_url('/'));
+    }
+    
+    /**
+     * @param   string      $transaction_id
+     * @param   array       $ex_params
+     * @return  string
+     */
+    public function getProcessPageUrl($transaction_id, array $ex_params = [])
+    {
+        $ex_params[PAYNET_EASY_PAGE]    = 1;
+        $ex_params['transaction_id']    = $transaction_id;
+        
+        return add_query_arg($ex_params, home_url('/'));
+    }
+    
+    public function isSandboxMode()
+    {
+        return !empty($this->settings['test_mode']) && $this->settings['test_mode'] === 'yes';
+    }
+    
+    public function getGatewayMode()
+    {
+        return $this->isSandboxMode() ? QueryConfig::GATEWAY_MODE_SANDBOX : QueryConfig::GATEWAY_MODE_PRODUCTION;
     }
 }

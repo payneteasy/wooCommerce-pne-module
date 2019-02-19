@@ -235,4 +235,25 @@ class Transaction          extends PaymentTransaction
         
         return $this;
     }
+    
+    /**
+     * @return bool
+     */
+    public function isRedirect()
+    {
+        return $this->response !== null && $this->response->getNeededAction() === Response::NEEDED_REDIRECT;
+    }
+    
+    /**
+     * @return string|null
+     */
+    public function getRedirectUrl()
+    {
+        if($this->isRedirect())
+        {
+            return $this->response->getRedirectUrl();
+        }
+        
+        return null;
+    }
 }

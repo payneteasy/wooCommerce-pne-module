@@ -68,6 +68,11 @@ class PaymentStrategy
         return $this;
     }
     
+    public function getTransaction()
+    {
+        return $this->transaction;
+    }
+    
     public function getPaymentUrlParameter($action)
     {
         return [self::PAYNET_PARAMETER => $action];

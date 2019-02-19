@@ -19,4 +19,5 @@ interface IntegrationInterface      extends LoggerInterface
      */
     public function findTransactionByPaynetId($paynetId);
     public function findTransactionById($transactionId);
+    public function findTransactionByOrderId($orderId);
 }

@@ -219,17 +219,17 @@ class WordPressPlugin
      */
     public function on_template_include($template)
     {
-        if(empty($_REQUEST[PAYNET_EASY_PAGE]) || empty($_REQUEST['transaction_id']))
+        if(empty($_REQUEST[PAYNET_EASY_PAGE]))
         {
             return $template;
         }
 
         $gateway                    = new Gateway();
-        $transaction                = $gateway->handle_progress($_REQUEST['transaction_id']);
+        $transaction                = $gateway->handle_progress();
         $redirect                   = null;
 
         // If transaction is done
-        if(false === $transaction->isProcessing() || $transaction->is_redirect())
+        if(false === $transaction->isProcessing() || $transaction->isRedirect())
         {
             $redirect               = $gateway->define_redirect_for_transaction($transaction);
 
@@ -244,7 +244,7 @@ class WordPressPlugin
         set_query_var('payneteasy_transaction', $transaction);
 
         // Show HTML for 3D if needed
-        if($transaction->get_html_for_show() !== null)
+        if($transaction->getHtml() !== null)
         {
             return $this->plugin_dir.'/templates/show_html.php';
         }

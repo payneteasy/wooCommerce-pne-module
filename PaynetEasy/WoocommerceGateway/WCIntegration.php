@@ -20,6 +20,7 @@ use PaynetEasy\PaynetEasyApi\Util\RegionFinder;
 class WCIntegration                 implements IntegrationInterface
 {
     const DATABASE_TABLE            = 'payneteasy_transactions';
+    const TRANSACTION_ID            = 'payneteasy_transaction_id';
     
     protected $table                = '';
     
@@ -47,13 +48,142 @@ class WCIntegration                 implements IntegrationInterface
         $this->payment_strategy     = new PaymentStrategy($this);
     }
     
-    public function processPayment($order_id)
+    /**
+     * @param   string  $order_id
+     *
+     * @return Transaction
+     */
+    public function startPayment($order_id)
     {
         $this->debug($order_id.': Start processing payment');
         
         $this->payment_strategy->assignOrderId($order_id);
         $this->payment_strategy->execute();
         
+        $transaction                = $this->payment_strategy->getTransaction();
+        // save transaction id into session
+        WC()->session->set(self::TRANSACTION_ID, $transaction->getTransactionId());
+        
+        return $transaction;
+    }
+    
+    /**
+     * @return Transaction
+     * @throws \Exception
+     */
+    public function processPayment()
+    {
+        // restore transaction id
+        $transaction_id             = WC()->session->get(self::TRANSACTION_ID);
+        
+        if(!empty($transaction_id))
+        {
+            $this->payment_strategy->assignTransaction($this->findTransactionById($transaction_id));
+        }
+        
+        $this->payment_strategy->execute();
+        return $this->payment_strategy->getTransaction();
+    }
+    
+    public function processCallback()
+    {
+        $this->notice('Detect callback link using');
+        
+        try
+        {
+            $this->payment_strategy->execute();
+    
+            $response                   = $this->payment_strategy->getResponse();
+            $status                     = $this->translateStatus($response->getStatus());
+            $order_id                   = $this->payment_strategy->getTransaction()->getOrderId();
+            $paynet_order_id            = $this->payment_strategy->getTransaction()->getResponse()->getPaymentPaynetId();
+    
+            // notice
+            wc_get_order($order_id)->add_order_note
+            (
+                __('CALLBACK has been received with status', 'paynet-easy-gateway').
+                ': '.$status.
+                ' (paynet id = '.$paynet_order_id.')'
+            );
+        }
+        catch (\Exception $exception)
+        {
+            $transaction                = $this->payment_strategy->getTransaction();
+            
+            if($transaction === null || empty($transaction->getOrderId()))
+            {
+                $this->error($exception->getMessage());
+                return -500;
+            }
+    
+            $order                      = wc_get_order($transaction->getOrderId());
+            
+            if(empty($order))
+            {
+                return -501;
+            }
+            
+            $order->add_order_note
+            (
+                __('CALLBACK error: ', 'paynet-easy-gateway').$exception->getMessage()
+            );
+            
+            return -2;
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * @return Transaction
+     * @throws \Exception
+     */
+    public function processRedirect()
+    {
+        $this->notice('Detect redirect link using');
+    
+        try
+        {
+            $this->payment_strategy->execute();
+        
+            $response                   = $this->payment_strategy->getResponse();
+            $status                     = $this->translateStatus($response->getStatus());
+            $order_id                   = $this->payment_strategy->getTransaction()->getOrderId();
+            $paynet_order_id            = $this->payment_strategy->getTransaction()->getResponse()->getPaymentPaynetId();
+        
+            // notice
+            wc_get_order($order_id)->add_order_note
+            (
+                __('REDIRECT has been received with status', 'paynet-easy-gateway').
+                ': '.$status.
+                ' (paynet id = '.$paynet_order_id.')'
+            );
+        }
+        catch (\Exception $exception)
+        {
+            $transaction                = $this->payment_strategy->getTransaction();
+        
+            if($transaction === null || empty($transaction->getOrderId()))
+            {
+                $this->error($exception->getMessage());
+                throw $exception;
+            }
+        
+            $order                      = wc_get_order($transaction->getOrderId());
+        
+            if(empty($order))
+            {
+                throw $exception;
+            }
+        
+            $order->add_order_note
+            (
+                __('CALLBACK error: ', 'paynet-easy-gateway').$exception->getMessage()
+            );
+        
+            throw $exception;
+        }
+    
         return $this->payment_strategy->getTransaction();
     }
     
@@ -657,12 +787,28 @@ class WCIntegration                 implements IntegrationInterface
     
     public function getRedirectUrl()
     {
-        return add_query_arg(['wc-api' => $this->plugin_id.'_redirect'], home_url('/'));
+        $params                     = ['wc-api' => $this->plugin_id.'_redirect'];
+        
+        $params                     = array_merge
+        (
+            $params,
+            $this->payment_strategy->getPaymentUrlParameter(PaymentStrategy::ACTION_REDIRECT)
+        );
+        
+        return add_query_arg($params, home_url('/'));
     }
     
     public function getCallbackUrl()
     {
-        return add_query_arg(['wc-api' => $this->plugin_id.'_callback'], home_url('/'));
+        $params                     = ['wc-api' => $this->plugin_id.'_callback'];
+    
+        $params                     = array_merge
+        (
+            $params,
+            $this->payment_strategy->getPaymentUrlParameter(PaymentStrategy::ACTION_CALLBACK)
+        );
+        
+        return add_query_arg($params, home_url('/'));
     }
     
     /**
@@ -675,6 +821,12 @@ class WCIntegration                 implements IntegrationInterface
         $ex_params[PAYNET_EASY_PAGE]    = 1;
         $ex_params['transaction_id']    = $transaction_id;
         
+        $ex_params                      = array_merge
+        (
+            $ex_params,
+            $this->payment_strategy->getPaymentUrlParameter(PaymentStrategy::ACTION_REDIRECT)
+        );
+        
         return add_query_arg($ex_params, home_url('/'));
     }
     
@@ -686,5 +838,25 @@ class WCIntegration                 implements IntegrationInterface
     public function getGatewayMode()
     {
         return $this->isSandboxMode() ? QueryConfig::GATEWAY_MODE_SANDBOX : QueryConfig::GATEWAY_MODE_PRODUCTION;
+    }
+    
+    /**
+     * @param string $status
+     *
+     * @return string
+     */
+    public function translateStatus($status)
+    {
+        switch ($status)
+        {
+            case 'approved':        return __('approved', 'paynet-easy-gateway');
+            case 'declined':        return __('declined', 'paynet-easy-gateway');
+            case 'error':           return __('error', 'paynet-easy-gateway');
+            case 'filtered':        return __('filtered', 'paynet-easy-gateway');
+            case 'processing':      return __('processing', 'paynet-easy-gateway');
+            case 'unknown':         return __('unknown', 'paynet-easy-gateway');
+            
+            default: return $status;
+        }
     }
 }

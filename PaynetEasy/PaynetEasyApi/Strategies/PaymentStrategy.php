@@ -16,8 +16,21 @@ use PaynetEasy\PaynetEasyApi\Transport\Response;
  */
 class PaymentStrategy
 {
+    /**
+     * Update current status
+     */
+    const ACTION_STATUS             = 'status';
+    /**
+     * Redirect from Paynet
+     */
     const ACTION_REDIRECT           = 'redirect';
+    /**
+     * Callback from Paynet
+     */
     const ACTION_CALLBACK           = 'callback';
+    /**
+     * Action parameter
+     */
     const PAYNET_PARAMETER          = 'action';
     
     /**
@@ -61,6 +74,13 @@ class PaymentStrategy
         return $this;
     }
     
+    public function assignTransaction(Transaction $transaction)
+    {
+        $this->transaction          = $transaction;
+        
+        return $this;
+    }
+    
     public function assignOrderId($orderId)
     {
         $this->orderId              = $orderId;
@@ -86,6 +106,16 @@ class PaymentStrategy
         }
         
         return $_REQUEST[self::PAYNET_PARAMETER];
+    }
+    
+    public function getResponse()
+    {
+        if($this->callback instanceof CallbackResponse)
+        {
+            return $this->callback;
+        }
+        
+        return $this->response;
     }
     
     public function execute()
@@ -220,7 +250,7 @@ class PaymentStrategy
         }
     
         // save modifications
-        $this->transaction->save();
+        $this->integration->saveTransaction($this->transaction);
     }
     
     protected function handleError()

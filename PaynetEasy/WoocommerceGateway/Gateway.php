@@ -173,7 +173,7 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function process_payment($order_id)
     {
-        $transaction                = $this->wc_integration->processPayment($order_id);
+        $transaction                = $this->wc_integration->startPayment($order_id);
 
         // Redirect to the thank you page
         return
@@ -184,26 +184,13 @@ class Gateway                       extends     \WC_Payment_Gateway
     }
 
     /**
-     * @param $transaction_id
-     *
-     * @return PaymentTransaction
+     * @return Transaction
      *
      * @throws \Exception
      */
-    public function handle_progress($transaction_id)
+    public function handle_progress()
     {
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->executeQuery('status', $transaction);
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
-        return $transaction;
+        return $this->wc_integration->processPayment();
     }
 
     public function define_redirect_for_transaction(Transaction $transaction)
@@ -234,53 +221,7 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function on_callback()
     {
-        $this->log('Detect callback using');
-
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect callback using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect callback using with wrong "orderid" = '.$paynet_order_id);
-        }
-
-        $this->log('Detect callback using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-        
-        // 2. Execute query
-        $response                   = new CallbackResponse($_REQUEST);
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processPaynetEasyCallback
-        (
-            $response,
-            $transaction
-        );
-        
-        // 3. Translate callback status
-        $status                     = $this->translate_status($response->getStatus());
-        
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-    
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('CALLBACK has been received with status', 'paynet-easy-gateway').
-            ': '.$status.
-            ' (paynet id = '.$paynet_order_id.')'
-        );
-        
-        return 1;
+        return $this->wc_integration->processCallback();
     }
 
     /**
@@ -292,45 +233,8 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function on_redirect()
     {
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect redirect_url using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect redirect_url using with wrong "orderid" = '.$paynet_order_id);
-            return -2;
-        }
-
-        $this->log('Detect redirect_url using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('REDIRECT has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processCustomerReturn
-        (
-            new CallbackResponse($_REQUEST),
-            $transaction
-        );
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
+        $transaction            = $this->wc_integration->processRedirect();
+        
         $redirect               = $this->define_redirect_for_transaction($transaction);
 
         if($redirect !== null)
@@ -647,24 +551,5 @@ EOD;
         do_action('woocommerce_credit_card_form_end', $this->id);
 
         echo '<div class="clear"></div></fieldset>';
-    }
-    
-    /**
-     * @param string $status
-     *
-     * @return string
-     */
-    public function translate_status($status)
-    {
-        switch ($status)
-        {
-            case 'approved': return __('approved', 'paynet-easy-gateway');
-            case 'declined': return __('declined', 'paynet-easy-gateway');
-            case 'error':    return __('error', 'paynet-easy-gateway');
-            case 'filtered': return __('filtered', 'paynet-easy-gateway');
-            case 'processing': return __('processing', 'paynet-easy-gateway');
-            case 'unknown': return __('unknown', 'paynet-easy-gateway');
-            default: return $status;
-        }
     }
 }

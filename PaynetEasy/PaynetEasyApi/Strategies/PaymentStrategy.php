@@ -157,7 +157,6 @@ class PaymentStrategy
     
     /**
      * @throws PaynetIdUndefined
-     * @throws TransactionNotFoundByOrderId
      * @throws TransactionNotFoundByPaynetId
      */
     protected function defineCurrentTransaction()
@@ -186,13 +185,13 @@ class PaymentStrategy
         {
             $this->transaction      = $this->integration->findTransactionByOrderId($this->orderId);
     
-            if($this->transaction === null)
+            if($this->transaction !== null)
             {
-                throw new TransactionNotFoundByOrderId($this->orderId);
+                return;
             }
         }
         
-        $this->transaction          = $this->integration->newTransaction();
+        $this->transaction          = $this->integration->newTransaction($this->orderId);
     }
     
     /**
@@ -258,18 +257,21 @@ class PaymentStrategy
         // Done
         $this->transaction->setState(Transaction::STATE_DONE);
         $this->integration->debug($this->orderId.": Transaction has error {$this->transaction->getTransactionId()}");
+        $this->integration->onError($this->transaction);
     }
     
     protected function handleApprove()
     {
         $this->transaction->setState(Transaction::STATE_DONE);
         $this->integration->debug($this->orderId.": Transaction approved {$this->transaction->getTransactionId()}");
+        $this->integration->onApprove($this->transaction);
     }
     
     protected function handleProcess()
     {
         $this->transaction->setState(Transaction::STATE_PROCESSING);
         $this->integration->debug($this->orderId.": Transaction continue processing {$this->transaction->getTransactionId()}");
+        $this->integration->onProcess($this->transaction);
     }
     
     protected function outResponse()
@@ -279,7 +281,7 @@ class PaymentStrategy
     
     protected function handleException($exception)
     {
-    
+        $this->integration->onException($exception);
     }
     
     protected function createPaymentProcessor()

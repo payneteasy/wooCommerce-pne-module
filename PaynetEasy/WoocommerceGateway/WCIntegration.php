@@ -46,6 +46,7 @@ class WCIntegration                 implements IntegrationInterface
         $this->plugin_id            = $plugin_id;
         $this->settings             = $settings;
         $this->payment_strategy     = new PaymentStrategy($this);
+        $this->logger               = $logger;
     }
     
     /**
@@ -188,15 +189,19 @@ class WCIntegration                 implements IntegrationInterface
     }
     
     /**
+     * @param null $order_id
+     *
      * @return Transaction
      *
      * @throws \Exception
      */
-    public function newTransaction()
+    public function newTransaction($order_id = null)
     {
         $transaction                = new Transaction($this);
         $transaction->setTransactionType(Transaction::SALE);
-        $transaction->setIntegrationMethod(Transaction::METHOD_INLINE);
+        $transaction->setIntegrationMethod($this->defineIntegrationMethod($order_id));
+        $transaction->setOrderId($order_id);
+        
         $this->definePaymentData($transaction);
         
         return $transaction;
@@ -475,6 +480,117 @@ class WCIntegration                 implements IntegrationInterface
         }
         
         return $this->initTransaction(new Transaction($this), $result);
+    }
+    
+    public function onError(Transaction $transaction)
+    {
+        $order_id                   = $transaction->getOrderId();
+        
+        if(empty($order_id))
+        {
+            return;
+        }
+        
+        $order                      = wc_get_order($order_id);
+        
+        if(empty($order))
+        {
+            return;
+        }
+        
+        $transaction_id             = $transaction->getTransactionId();
+        
+        $paynet_id                  = '';
+        
+        if($transaction->getResponse() !== null)
+        {
+            $paynet_id              = $transaction->getResponse()->getPaymentPaynetId();
+        }
+    
+        $errors                     = [];
+    
+        foreach ($transaction->getErrors() as $error)
+        {
+            if($error instanceof \Exception)
+            {
+                $errors[]           = $error->getMessage();
+            }
+            else if(is_string($error))
+            {
+                $errors[]           = $error;
+            }
+        }
+    
+        $errors                     = implode("\n", $errors);
+    
+        $order->add_order_note
+        (
+            __('Payment declined', 'paynet-easy-gateway')
+            . " (transaction_id = $transaction_id, paynet_id = $paynet_id) errors:\n$errors"
+        );
+        
+        $order->update_status('failed', __('Payment declined', 'paynet-easy-gateway'));
+    }
+    
+    public function onApprove(Transaction $transaction)
+    {
+        $order_id                   = $transaction->getOrderId();
+    
+        if(empty($order_id))
+        {
+            return;
+        }
+    
+        $order                      = wc_get_order($order_id);
+    
+        if(empty($order))
+        {
+            return;
+        }
+    
+        $transaction_id             = $transaction->getTransactionId();
+        $paynet_id                  = $transaction->getResponse()->getPaymentPaynetId();
+    
+        $order->add_order_note(__('Payment approved', 'paynet-easy-gateway')." (paynet id = $paynet_id)");
+        $order->payment_complete($transaction_id);
+    }
+    
+    public function onProcess(Transaction $transaction)
+    {
+        $order_id                   = $transaction->getOrderId();
+    
+        if(empty($order_id))
+        {
+            return;
+        }
+    
+        $order                      = wc_get_order($order_id);
+    
+        if(empty($order))
+        {
+            return;
+        }
+        
+        $action                     = $transaction->getResponse()->getNeededAction();
+    
+        if(empty($action) || $action === Response::NEEDED_STATUS_UPDATE)
+        {
+            /* Translators: It's status for order notes */
+            $order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': wait');
+        }
+        elseif($action === Response::NEEDED_SHOW_HTML)
+        {
+            $order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': show html');
+        }
+        elseif($action === Response::NEEDED_REDIRECT)
+        {
+            $order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': redirect');
+        }
+    }
+    
+    public function onException(\Exception $exception)
+    {
+        // TODO: Implement onException() method.
     }
     
     public function notice($message)

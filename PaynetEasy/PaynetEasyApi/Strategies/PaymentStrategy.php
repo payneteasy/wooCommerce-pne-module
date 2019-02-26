@@ -231,6 +231,11 @@ class PaymentStrategy
             $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");
             $this->response     = $paymentProcessor->executeQuery($this->transaction->definePaymentMethod(), $this->transaction);
         }
+        
+        if($this->response !== null)
+        {
+            $this->transaction->setResponse($this->response);
+        }
     }
     
     protected function handleTransaction()

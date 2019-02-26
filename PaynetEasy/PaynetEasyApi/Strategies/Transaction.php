@@ -199,6 +199,18 @@ class Transaction          extends PaymentTransaction
     }
     
     /**
+     * @param   Response $response
+     *
+     * @return  $this
+     */
+    public function setResponse(Response $response)
+    {
+        $this->response             = $response;
+        
+        return $this;
+    }
+    
+    /**
      * @return Transaction
      */
     public function getParentTransaction()

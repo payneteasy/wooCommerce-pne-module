@@ -569,7 +569,7 @@ class WCIntegration                 implements IntegrationInterface
     
         $order                      = wc_get_order($order_id);
     
-        if(empty($order))
+        if(empty($order) || $transaction->getResponse() === null)
         {
             return;
         }
@@ -593,7 +593,7 @@ class WCIntegration                 implements IntegrationInterface
     
     public function onException(\Exception $exception)
     {
-        wc_add_notice(__('Error during payment processing', 'paynet-easy-gateway'));
+        wc_add_notice(__('Error during payment processing', 'paynet-easy-gateway'), 'error');
         
         // Try get order
         $transaction                = $this->payment_strategy->getTransaction();
@@ -948,12 +948,11 @@ class WCIntegration                 implements IntegrationInterface
     public function getProcessPageUrl($transaction_id, array $ex_params = [])
     {
         $ex_params[PAYNET_EASY_PAGE]    = 1;
-        $ex_params['transaction_id']    = $transaction_id;
         
         $ex_params                      = array_merge
         (
             $ex_params,
-            $this->payment_strategy->getPaymentUrlParameter(PaymentStrategy::ACTION_REDIRECT)
+            $this->payment_strategy->getPaymentUrlParameter(PaymentStrategy::ACTION_STATUS)
         );
         
         return add_query_arg($ex_params, home_url('/'));

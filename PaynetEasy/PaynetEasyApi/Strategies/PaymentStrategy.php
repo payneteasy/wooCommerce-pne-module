@@ -161,6 +161,12 @@ class PaymentStrategy
      */
     protected function defineCurrentTransaction()
     {
+        // When transaction already exists return
+        if($this->transaction !== null)
+        {
+            return;
+        }
+        
         if($this->callback instanceof CallbackResponse)
         {
             $paynetId               = $this->callback->getPaymentPaynetId();

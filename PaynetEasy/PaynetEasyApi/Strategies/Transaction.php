@@ -232,6 +232,15 @@ class Transaction          extends PaymentTransaction
         {
             $this->errors           = $errors;
         }
+        else
+        {
+            if(!is_array($this->errors))
+            {
+                $this->errors       = [];
+            }
+            
+            $this->errors[]         = $errors;
+        }
         
         return $this;
     }

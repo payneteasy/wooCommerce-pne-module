@@ -199,8 +199,11 @@ class WCIntegration                 implements IntegrationInterface
     {
         $transaction                = new Transaction($this);
         $transaction->setTransactionType(Transaction::SALE);
+        $transaction->setOperation(Transaction::SALE);
         $transaction->setIntegrationMethod($this->defineIntegrationMethod($order_id));
         $transaction->setOrderId($order_id);
+    
+        $transaction->setQueryConfig($this->getQueryConfig());
         
         $this->definePaymentData($transaction);
         
@@ -280,7 +283,7 @@ class WCIntegration                 implements IntegrationInterface
     
         if($payment instanceof Payment)
         {
-            $data['paynet_order_id'] = $payment->getPaynetId();
+            $data['paynet_order_id'] = $payment->getPaynetId() ?? 0;
         }
     
         $errors                     = $transaction->getErrors();
@@ -590,7 +593,17 @@ class WCIntegration                 implements IntegrationInterface
     
     public function onException(\Exception $exception)
     {
-        // TODO: Implement onException() method.
+        wc_add_notice(__('Error during payment processing', 'paynet-easy-gateway'));
+        
+        // Try get order
+        $transaction                = $this->payment_strategy->getTransaction();
+        
+        if(empty($transaction))
+        {
+            return;
+        }
+
+        $this->onError($transaction);
     }
     
     public function notice($message)

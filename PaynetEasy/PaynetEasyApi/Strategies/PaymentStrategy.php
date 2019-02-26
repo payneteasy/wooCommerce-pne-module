@@ -279,19 +279,23 @@ class PaymentStrategy
     
     }
     
-    protected function handleException($exception)
+    protected function handleException(\Exception $exception)
     {
+        $this->integration->error('Exception: '.$exception->getTraceAsString());
+        
+        if($this->transaction !== null)
+        {
+            $this->transaction->setState(Transaction::STATE_DONE);
+            $this->transaction->setErrors($exception);
+            $this->integration->saveTransaction($this->transaction);
+        }
+        
         $this->integration->onException($exception);
     }
     
     protected function createPaymentProcessor()
     {
-        $handlers                   =
-        [
-            PaymentProcessor::HANDLER_SAVE_CHANGES => [$this, 'onSaveTransaction']
-        ];
-        
-        $payment_processor          = new PaymentProcessor($handlers);
+        $payment_processor          = new PaymentProcessor();
         
         return $payment_processor;
     }

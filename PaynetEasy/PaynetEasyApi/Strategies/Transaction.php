@@ -180,13 +180,6 @@ class Transaction          extends PaymentTransaction
      */
     public function getHtml()
     {
-        if(empty($this->html)
-            && $this->response instanceof Response
-            && !empty($this->response->getHtml()))
-        {
-            return $this->response->getHtml();
-        }
-        
         return $this->html;
     }
     

@@ -2,9 +2,7 @@
 namespace PaynetEasy\PaynetEasyApi\Strategies;
 
 use PaynetEasy\PaynetEasyApi\Exception\PaynetIdUndefined;
-use PaynetEasy\PaynetEasyApi\Exception\ResponseException;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionHasWrongState;
-use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByOrderId;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByPaynetId;
 use PaynetEasy\PaynetEasyApi\PaymentProcessor;
 use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
@@ -280,6 +278,12 @@ class PaymentStrategy
     
     protected function handleProcess()
     {
+        if($this->response !== null && $this->response->isShowHtmlNeeded())
+        {
+            // save html to transaction
+            $this->transaction->setHtml($this->response->getHtml());
+        }
+        
         $this->transaction->setState(Transaction::STATE_PROCESSING);
         $this->integration->debug($this->orderId.": Transaction continue processing {$this->transaction->getTransactionId()}");
         $this->integration->onProcess($this->transaction);

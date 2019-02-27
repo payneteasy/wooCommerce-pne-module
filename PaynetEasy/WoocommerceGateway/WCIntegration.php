@@ -916,7 +916,7 @@ class WCIntegration                 implements IntegrationInterface
     
     public function getRedirectUrl()
     {
-        $params                     = ['wc-api' => $this->plugin_id.'_redirect'];
+        $params                     = ['wc-api' => $this->plugin_id.'_redirect', 't' => time()];
         
         $params                     = array_merge
         (
@@ -929,7 +929,7 @@ class WCIntegration                 implements IntegrationInterface
     
     public function getCallbackUrl()
     {
-        $params                     = ['wc-api' => $this->plugin_id.'_callback'];
+        $params                     = ['wc-api' => $this->plugin_id.'_callback', 't' => time()];
     
         $params                     = array_merge
         (
@@ -948,6 +948,8 @@ class WCIntegration                 implements IntegrationInterface
     public function getProcessPageUrl($transaction_id, array $ex_params = [])
     {
         $ex_params[PAYNET_EASY_PAGE]    = 1;
+        // time
+        $ex_params['t']                 = time();
         
         $ex_params                      = array_merge
         (

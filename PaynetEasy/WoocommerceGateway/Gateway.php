@@ -1,10 +1,9 @@
 <?php
 namespace PaynetEasy\WoocommerceGateway;
 
+use PaynetEasy\PaynetEasyApi\Exception\ValidationException;
 use PaynetEasy\PaynetEasyApi\Strategies\LoggerInterface;
 use PaynetEasy\PaynetEasyApi\Strategies\Transaction;
-use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
-use PaynetEasy\PaynetEasyApi\Transport\Response;
 
 class Gateway                       extends     \WC_Payment_Gateway
                                     implements  LoggerInterface
@@ -91,7 +90,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         $this->wc_integration       = new WCIntegration($this->id, $this->settings, $this);
     
         // has fields mode is on only for Credit Card
-        $this->has_fields           = $this->wc_integration->defineIntegrationMethod() === PaymentTransaction::METHOD_INLINE;
+        $this->has_fields           = $this->wc_integration->defineIntegrationMethod() === Transaction::METHOD_INLINE;
     }
 
     public function image_url($file)
@@ -130,36 +129,28 @@ class Gateway                       extends     \WC_Payment_Gateway
 
     public function validate_fields()
     {
-        // Checking data only for sale (credit card inline form)
-        if($this->wc_integration->defineIntegrationMethod() !== PaymentTransaction::METHOD_INLINE)
+        try
         {
-            return true;
-        }
-
-        // Check fields
-        $required                   =
-        [
-            //'billing_phone'         => __('Phone', 'paynet-easy-gateway'),
-            'card_printed_name'     => __('Printed name', 'paynet-easy-gateway'),
-            'credit_card_number'    => __('Card number', 'paynet-easy-gateway'),
-            'expire_month'          => __('Expire month', 'paynet-easy-gateway'),
-            'expire_year'           => __('Expire year', 'paynet-easy-gateway'),
-            'cvv2'                  => __('Cvv', 'paynet-easy-gateway')
-        ];
-
-        $no_errors                  = true;
-
-        foreach ($required as $name => $title)
-        {
-            if(empty($_REQUEST[$name]) || empty(trim($_REQUEST[$name])))
+            $errors                 = $this->wc_integration->validateData($_REQUEST);
+            
+            if(empty($errors))
             {
-                $no_errors          = true;
-                /* Translators: %s is field name */
-                wc_add_notice(sprintf( __( 'Required "%s" field', 'paynet-easy-gateway'), $title), 'error');
+                return true;
             }
+    
+            foreach ($errors as $error)
+            {
+                wc_add_notice($error, 'error');
+            }
+            
+            return false;
         }
-
-        return $no_errors;
+        catch (\Exception $exception)
+        {
+            wc_add_notice(__('Validation error', 'paynet-easy-gateway'), 'error');
+            
+            return false;
+        }
     }
 
     /**
@@ -452,7 +443,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         }
 
         // add to description form instruction
-        if($this->wc_integration->defineIntegrationMethod() === PaymentTransaction::METHOD_FORM)
+        if($this->wc_integration->defineIntegrationMethod() === Transaction::METHOD_FORM)
         {
             if(!is_string($this->description))
             {

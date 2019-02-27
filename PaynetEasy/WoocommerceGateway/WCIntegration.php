@@ -12,6 +12,7 @@ use PaynetEasy\PaynetEasyApi\Strategies\PaymentStrategy;
 use PaynetEasy\PaynetEasyApi\Strategies\Transaction;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 use PaynetEasy\PaynetEasyApi\Util\RegionFinder;
+use PaynetEasy\PaynetEasyApi\Util\Validator;
 
 /**
  * Class WCIntegration
@@ -47,6 +48,68 @@ class WCIntegration                 implements IntegrationInterface
         $this->settings             = $settings;
         $this->payment_strategy     = new PaymentStrategy($this);
         $this->logger               = $logger;
+    }
+    
+    /**
+     * @param array $data
+     *
+     * @return array|bool
+     *
+     * @throws \PaynetEasy\PaynetEasyApi\Exception\ValidationException
+     */
+    public function validateData(array $data)
+    {
+        // Checking data only for sale (credit card inline form)
+        if($this->defineIntegrationMethod() !== Transaction::METHOD_INLINE)
+        {
+            return true;
+        }
+    
+        // Check fields
+        $required                   =
+        [
+            //'billing_phone'       => __('Phone', 'paynet-easy-gateway'),
+            'card_printed_name'     => __('Printed name', 'paynet-easy-gateway'),
+            'credit_card_number'    => __('Card number', 'paynet-easy-gateway'),
+            'expire_month'          => __('Expire month', 'paynet-easy-gateway'),
+            'expire_year'           => __('Expire year', 'paynet-easy-gateway'),
+            'cvv2'                  => __('Cvv', 'paynet-easy-gateway')
+        ];
+        
+        $rules                      =
+        [
+            'credit_card_number'    => Validator::CREDIT_CARD_NUMBER,
+            'expire_month'          => Validator::MONTH,
+            'expire_year'           => Validator::YEAR,
+            'cvv2'                  => Validator::CVV2,
+        ];
+        
+        $errors                     = [];
+    
+        foreach ($required as $name => $title)
+        {
+            if(empty($data[$name]) || empty(trim($data[$name])))
+            {
+                /* Translators: %s is field name */
+                $errors[]           = sprintf( __( 'Required "%s" field', 'paynet-easy-gateway'), $title);
+            }
+        }
+    
+        foreach($rules as $name => $rule)
+        {
+            if(empty($data[$name]))
+            {
+                continue;
+            }
+    
+            if(!Validator::validateByRule($data[$name], $rule, false))
+            {
+                /* Translators: %s is field name */
+                $errors[]           = sprintf( __( 'The "%s" field is not valid', 'paynet-easy-gateway'), $required[$name]);
+            }
+        }
+        
+        return $errors;
     }
     
     /**

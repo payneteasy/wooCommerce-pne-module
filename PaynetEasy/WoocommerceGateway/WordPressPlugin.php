@@ -244,7 +244,7 @@ class WordPressPlugin
         set_query_var('payneteasy_transaction', $transaction);
 
         // Show HTML for 3D if needed
-        if($transaction->getHtml() !== null)
+        if(!empty($transaction->getHtml()))
         {
             return $this->plugin_dir.'/templates/show_html.php';
         }

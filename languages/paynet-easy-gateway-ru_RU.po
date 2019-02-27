@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2019-02-27 13:32+0300\n"
-"PO-Revision-Date: 2019-02-27 14:06+0300\n"
+"PO-Revision-Date: 2019-02-27 14:10+0300\n"
 "X-Generator: Poedit 2.2.1\n"
 "X-Domain: paynet-easy-gateway\n"
 "Last-Translator: \n"
@@ -248,7 +248,7 @@ msgstr "CALLBACK ошибка"
 
 #: PaynetEasy/WoocommerceGateway/WCIntegration.php:221
 msgid "REDIRECT has been received with status"
-msgstr "REDIRECR был принят со статусом"
+msgstr "REDIRECT был принят со статусом"
 
 #: PaynetEasy/WoocommerceGateway/WCIntegration.php:594
 #: PaynetEasy/WoocommerceGateway/WCIntegration.php:598

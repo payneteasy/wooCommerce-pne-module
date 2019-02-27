@@ -134,17 +134,15 @@ class WordPressPlugin
     }
 
     /**
-     * Include file /languages/plugin_basename.pot file
-     *
      * @return $this
      */
     public function define_locale()
     {
         load_plugin_textdomain
         (
-            $this->plugin_basename,
+            'paynet-easy-gateway',
             false,
-            $this->plugin_dir.'/languages/'
+            dirname($this->plugin_basename).'/languages/'
         );
 
         return $this;

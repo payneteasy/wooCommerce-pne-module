@@ -28,4 +28,5 @@ interface IntegrationInterface      extends LoggerInterface
     public function onProcess(Transaction $transaction);
     public function onException(\Exception $exception);
     
+    public function onReversal(Transaction $transaction);
 }

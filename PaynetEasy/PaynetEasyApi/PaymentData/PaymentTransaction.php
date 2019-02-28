@@ -56,6 +56,10 @@ class PaymentTransaction extends Data
      */
     const REVERSAL          = 'reversal';
     /**
+     * Transaction type: chargeback
+     */
+    const CHARGEBACK        = 'chargeback';
+    /**
      * Transaction type: capture
      */
     const CAPTURE           = 'capture';
@@ -236,7 +240,7 @@ class PaymentTransaction extends Data
     {
         return $this->status;
     }
-
+    
     /**
      * True, if payment transaction is new
      *

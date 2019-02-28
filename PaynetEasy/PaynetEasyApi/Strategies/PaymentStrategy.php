@@ -123,7 +123,15 @@ class PaymentStrategy
             $this->detectPaynetCallback();
             $this->defineCurrentTransaction();
             $this->processing();
-            $this->handleTransaction();
+            
+            if($this->transaction->isReversal())
+            {
+                $this->handleReversalTransaction();
+            }
+            else
+            {
+                $this->handleTransaction();
+            }
         }
         catch (\Exception $exception)
         {
@@ -159,6 +167,39 @@ class PaymentStrategy
      */
     protected function defineCurrentTransaction()
     {
+        // For reversal
+        if($this->callback instanceof CallbackResponse && $this->callback->isReversal())
+        {
+            $this->integration->debug("Detect reversal callback");
+            
+            // If current transaction has same type with callback
+            if($this->transaction !== null && $this->transaction->getTransactionType() === $this->callback->getType())
+            {
+                return;
+            }
+    
+            $paynetId               = $this->callback->getPaymentPaynetId();
+            $orderId                = $this->callback->getPaymentClientId();
+    
+            $this->integration->debug("Detect reversal callback with paynet_id = $paynetId and order_id = $orderId");
+    
+            $this->transaction      = $this->integration->findTransactionByPaynetId($paynetId);
+            
+            if($this->transaction === null)
+            {
+                // create new transaction for reversal
+                $this->transaction  = $this->integration->newTransaction($orderId);
+                $this->transaction->setTransactionType($this->callback->getType());
+                $this->transaction->setOperation($this->callback->getType());
+                $this->transaction->setResponse($this->callback);
+                
+                // Transaction done
+                $this->transaction->setState(Transaction::STATE_DONE);
+            }
+            
+            return;
+        }
+        
         // When transaction already exists return
         if($this->transaction !== null)
         {
@@ -240,6 +281,29 @@ class PaymentStrategy
         {
             $this->transaction->setResponse($this->response);
         }
+    }
+    
+    protected function handleReversalTransaction()
+    {
+        if($this->transaction->isDeclined() || $this->transaction->isError())
+        {
+            $this->transaction->setState(Transaction::STATE_DONE);
+            $this->integration->debug($this->orderId.": Reversal has error {$this->transaction->getTransactionId()}");
+        }
+        elseif($this->transaction->isApproved())
+        {
+            $this->transaction->setState(Transaction::STATE_DONE);
+            $this->integration->debug($this->orderId.": Reversal has approved {$this->transaction->getTransactionId()}");
+            $this->integration->onReversal($this->transaction);
+        }
+        elseif($this->transaction->isProcessing())
+        {
+            $this->transaction->setState(Transaction::STATE_PROCESSING);
+            $this->integration->debug($this->orderId.": Reversal processing {$this->transaction->getTransactionId()}");
+        }
+    
+        // save modifications
+        $this->integration->saveTransaction($this->transaction);
     }
     
     protected function handleTransaction()

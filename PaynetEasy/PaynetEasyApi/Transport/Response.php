@@ -124,7 +124,7 @@ class Response extends ArrayObject
     {
         return $this->getNeededAction() == self::NEEDED_REDIRECT;
     }
-
+    
     /**
      * Get response html
      *

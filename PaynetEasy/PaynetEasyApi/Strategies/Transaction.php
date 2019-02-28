@@ -96,6 +96,16 @@ class Transaction          extends PaymentTransaction
     }
     
     /**
+     * Returns TRUE if REVERSAL or CHARGEBACK
+     *
+     * @return bool
+     */
+    public function isReversal()
+    {
+        return in_array($this->getTransactionType(), [self::REVERSAL, self::CHARGEBACK]);
+    }
+    
+    /**
      * @return string
      */
     public function getOrderId()

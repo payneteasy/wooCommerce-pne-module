@@ -10,6 +10,7 @@ use PaynetEasy\PaynetEasyApi\Strategies\IntegrationInterface;
 use PaynetEasy\PaynetEasyApi\Strategies\LoggerInterface;
 use PaynetEasy\PaynetEasyApi\Strategies\PaymentStrategy;
 use PaynetEasy\PaynetEasyApi\Strategies\Transaction;
+use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 use PaynetEasy\PaynetEasyApi\Util\RegionFinder;
 use PaynetEasy\PaynetEasyApi\Util\Validator;
@@ -667,6 +668,71 @@ class WCIntegration                 implements IntegrationInterface
         }
 
         $this->onError($transaction);
+    }
+    
+    public function createRefundForCallback(CallbackResponse $response)
+    {
+        /* @todo Crete refund for callback */
+    }
+    
+    /**
+     * @param Transaction $transaction
+     *
+     * @throws \Exception
+     */
+    public function onReversal(Transaction $transaction)
+    {
+        $order_id                   = $transaction->getOrderId();
+        
+        $order                      = wc_get_order($order_id);
+        
+        if(empty($order))
+        {
+            $this->error("Transaction Reversal detected with wrong order id $order_id (transaction id = {$transaction->getTransactionId()})");
+            $transaction->setErrors(new \Exception('Transaction Reversal detected with wrong order id'));
+            $transaction->setState(Transaction::STATE_DONE);
+            $transaction->setStatus(Transaction::STATUS_ERROR);
+            $this->saveTransaction($transaction);
+        }
+    
+        if($transaction->getTransactionType() === Transaction::CHARGEBACK)
+        {
+            $order->update_status('refunded', __('Payment chargeback', 'paynet-easy-gateway'));
+        }
+        else
+        {
+            $order->update_status('refunded', __('Payment reversal', 'paynet-easy-gateway'));
+        }
+
+        /*
+        
+        $refund_options             =
+        [
+            //  The amount to be refunded
+            'amount'                => '',
+            // Reason of the refund
+            'reason'                => '',
+            // ID of the order we want to refund
+            'order_id'              => '',
+            //  ID of the refund we want to use again and retry
+            // The array of line items will contain various information.
+            // Each array item will have the item’s ID as the array key.
+            //
+            // Each item that has been assigned to the array by the key, will have:
+            //
+            // * qty – Quantity
+            // * refund_total – Total amount to be refunded for that item
+            // * refund_tax – Tax to be refunded
+            //
+            'line_items'            => [],
+            // Boolean. If true, the refund process will also try to refund the payment through the payment gateway
+            'refund_payment'        => false,
+            // If true, it will restock the items back by the quantity of each line item that we have refunded
+            'restock_items'         => false
+        ];
+        
+        wc_create_refund($refund_options);
+        */
     }
     
     public function notice($message)

@@ -1,6 +1,7 @@
 <?php
 namespace PaynetEasy\PaynetEasyApi\Strategies;
 
+use PaynetEasy\PaynetEasyApi\Exception\PaynetException;
 use PaynetEasy\PaynetEasyApi\Exception\PaynetIdUndefined;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionHasWrongState;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByPaynetId;
@@ -237,6 +238,24 @@ class PaymentStrategy
         }
         
         $this->transaction          = $this->integration->newTransaction($this->orderId);
+    }
+    
+    /**
+     * @return Transaction
+     *
+     * @throws PaynetException
+     */
+    public function createReversalTransaction()
+    {
+        if($this->orderId === null)
+        {
+            throw new PaynetException('The orderId must be defined for Reversal');
+        }
+        
+        $this->transaction          = $this->integration->newTransaction($this->orderId);
+        $this->transaction->setTransactionType(Transaction::REVERSAL);
+        
+        return $this->transaction;
     }
     
     /**

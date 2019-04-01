@@ -253,6 +253,41 @@ class WCIntegration                 implements IntegrationInterface
     }
     
     /**
+     * Start refund process
+     *
+     * @param   int       $order_id
+     * @param   float     $amount
+     * @param   string    $reason
+     *
+     * @return Transaction
+     *
+     * @throws \PaynetEasy\PaynetEasyApi\Exception\PaynetException
+     */
+    public function startRefund($order_id, $amount = null, $reason = '')
+    {
+        $this->payment_strategy->assignOrderId($order_id);
+    
+        // Create reversal transaction and define data
+        $transaction                = $this->payment_strategy->createReversalTransaction();
+    
+        $order                      = wc_get_order($order_id);
+        
+        $data                       =
+        [
+            'client_id'             => $transaction->getOrderId(),
+            'comment'               => $reason,
+            'amount'                => $amount ?? $this->defineOrderTotal($order),
+            'currency'              => strtoupper($order->get_currency())
+        ];
+        
+        $transaction->setPayment(new Payment($data));
+        
+        // Execute query
+        $this->payment_strategy->execute();
+        return $this->payment_strategy->getTransaction();
+    }
+    
+    /**
      * @param null $order_id
      *
      * @return Transaction

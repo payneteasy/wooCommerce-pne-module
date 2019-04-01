@@ -54,7 +54,7 @@ class Gateway                       extends     \WC_Payment_Gateway
             'multiple_subscriptions',
         ];
         */
-        $this->supports             = ['products'];
+        $this->supports             = ['products', 'refunds'];
 
         // Load the form fields
         $this->init_form_fields();

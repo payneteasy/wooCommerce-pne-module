@@ -286,7 +286,7 @@ class WCIntegration                 implements IntegrationInterface
         [
             'client_id'             => $transaction->getOrderId(),
             // Paynet order id
-            'orderid'               => $sale_transaction->getPayment()->getPaynetId(),
+            'paynet_id'             => $sale_transaction->getPayment()->getPaynetId(),
             'comment'               => $reason,
             'amount'                => $amount ?? $this->defineOrderTotal($order),
             'currency'              => strtoupper($order->get_currency())
@@ -319,9 +319,8 @@ class WCIntegration                 implements IntegrationInterface
         
         if($is_define_data)
         {
-        
+            $this->definePaymentData($transaction);
         }
-        $this->definePaymentData($transaction);
         
         return $transaction;
     }

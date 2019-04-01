@@ -46,10 +46,12 @@ class ReturnQuery extends PaymentQuery
 
     protected function validatePaymentTransaction(PaymentTransaction $paymentTransaction)
     {
+        /*
         if (!$paymentTransaction->getPayment()->isPaid())
         {
             throw new ValidationException("Payment must be paid up to return funds");
         }
+        */
 
         parent::validatePaymentTransaction($paymentTransaction);
     }

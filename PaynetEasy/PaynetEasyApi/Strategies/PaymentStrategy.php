@@ -291,6 +291,12 @@ class PaymentStrategy
             $this->integration->debug($this->orderId.": Update status for transaction {$this->transaction->getTransactionId()}");
             $this->response     = $paymentProcessor->executeQuery('status', $this->transaction);
         }
+        elseif ($this->transaction->isReversal())
+        {
+            // start reversal
+            $this->integration->debug($this->orderId.": Start reversal transaction {$this->transaction->getTransactionId()}");
+            $this->response     = $paymentProcessor->executeQuery('return', $this->transaction);
+        }
         else
         {
             $this->integration->debug($this->orderId.": Start process transaction {$this->transaction->getTransactionId()}");

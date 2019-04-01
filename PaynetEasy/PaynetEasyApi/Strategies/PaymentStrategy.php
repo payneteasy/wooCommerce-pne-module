@@ -252,8 +252,9 @@ class PaymentStrategy
             throw new PaynetException('The orderId must be defined for Reversal');
         }
         
-        $this->transaction          = $this->integration->newTransaction($this->orderId);
+        $this->transaction          = $this->integration->newTransaction($this->orderId, false);
         $this->transaction->setTransactionType(Transaction::REVERSAL);
+        $this->transaction->setOperation(Transaction::REVERSAL);
         
         return $this->transaction;
     }

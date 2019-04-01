@@ -1,6 +1,7 @@
 <?php
 namespace PaynetEasy\WoocommerceGateway;
 
+use PaynetEasy\PaynetEasyApi\Exception\PaynetException;
 use PaynetEasy\PaynetEasyApi\PaymentData\BillingAddress;
 use PaynetEasy\PaynetEasyApi\PaymentData\CreditCard;
 use PaynetEasy\PaynetEasyApi\PaymentData\Customer;
@@ -262,19 +263,30 @@ class WCIntegration                 implements IntegrationInterface
      * @return Transaction
      *
      * @throws \PaynetEasy\PaynetEasyApi\Exception\PaynetException
+     * @throws \Exception
      */
     public function startRefund($order_id, $amount = null, $reason = '')
     {
+        // 1. Find sale transaction with status approved
+        $sale_transaction           = $this->findTransactionByOrderId($order_id, ['status' => Transaction::STATUS_APPROVED]);
+        
+        if($sale_transaction === null)
+        {
+            throw new PaynetException('I can not find a approved payment transaction to make a refund');
+        }
+        
         $this->payment_strategy->assignOrderId($order_id);
     
         // Create reversal transaction and define data
         $transaction                = $this->payment_strategy->createReversalTransaction();
-    
+        
         $order                      = wc_get_order($order_id);
         
         $data                       =
         [
             'client_id'             => $transaction->getOrderId(),
+            // Paynet order id
+            'orderid'               => $sale_transaction->getPayment()->getPaynetId(),
             'comment'               => $reason,
             'amount'                => $amount ?? $this->defineOrderTotal($order),
             'currency'              => strtoupper($order->get_currency())
@@ -288,13 +300,14 @@ class WCIntegration                 implements IntegrationInterface
     }
     
     /**
-     * @param null $order_id
+     * @param int $order_id
+     * @param bool $is_define_data
      *
      * @return Transaction
      *
      * @throws \Exception
      */
-    public function newTransaction($order_id = null)
+    public function newTransaction($order_id = null, $is_define_data = true)
     {
         $transaction                = new Transaction($this);
         $transaction->setTransactionType(Transaction::SALE);
@@ -304,6 +317,10 @@ class WCIntegration                 implements IntegrationInterface
     
         $transaction->setQueryConfig($this->getQueryConfig());
         
+        if($is_define_data)
+        {
+        
+        }
         $this->definePaymentData($transaction);
         
         return $transaction;
@@ -446,6 +463,12 @@ class WCIntegration                 implements IntegrationInterface
     
         $order                      = wc_get_order($transaction->getOrderId());
         
+        // Payment data for REVERSAL
+        if($transaction->getTransactionType() === Transaction::REVERSAL)
+        {
+            return;
+        }
+        
         $customer_data              =
         [
             'first_name'            => $order->get_billing_first_name() ?? $order->get_shipping_first_name(),
@@ -508,11 +531,12 @@ class WCIntegration                 implements IntegrationInterface
      * Find transaction by paynet id
      *
      * @param string $paynetId
+     * @param array $filters
      *
      * @return Transaction|null
      * @throws \Exception
      */
-    public function findTransactionByPaynetId($paynetId)
+    public function findTransactionByPaynetId($paynetId, array $filters = [])
     {
         global $wpdb;
     
@@ -562,17 +586,24 @@ class WCIntegration                 implements IntegrationInterface
      * Find transaction by order id
      *
      * @param string $orderId
+     * @param array $filters
      *
      * @return Transaction|null
      * @throws \Exception
      */
-    public function findTransactionByOrderId($orderId)
+    public function findTransactionByOrderId($orderId, array $filters = [])
     {
         global $wpdb;
         
         $orderId                    = esc_sql($orderId);
+    
+        if(empty($filters))
+        {
+            $filters                = ['state' => [Transaction::STATE_NEW, Transaction::STATE_PROCESSING]];
+        }
         
-        $query                      = "SELECT * FROM {$this->table} WHERE order_id = '{$orderId}' AND `state` IN ('new','processing')";
+        $query                      = "SELECT * FROM {$this->table} WHERE order_id = '{$orderId}' AND "
+                                    .$this->filtersToSql($filters);
         
         $result                     = $wpdb->get_row($query, ARRAY_A);
         
@@ -1153,4 +1184,50 @@ class WCIntegration                 implements IntegrationInterface
             default: return $status;
         }
     }
+    
+    /**
+     * @param array $filters
+     *
+     * @return string
+     */
+    protected function filtersToSql(array $filters)
+    {
+        if(empty($filters))
+        {
+            return '';
+        }
+        
+        $sql                        = [];
+        
+        foreach ($filters as $field => $filter)
+        {
+            if(is_array($filter))
+            {
+                $values             = [];
+                
+                foreach ($filter as $item)
+                {
+                    $values[]       = "'".esc_sql($item)."'";
+                }
+                
+                if(count($values) > 0)
+                {
+                    $sql[]          = "`$field` IN (".implode(',', $values).")";
+                }
+            }
+            else
+            {
+                $filter             = esc_sql($filter);
+                $sql[]              = "`$field` = '$filter'";
+            }
+        }
+        
+        if(empty($sql))
+        {
+            return '';
+        }
+        
+        return implode(' AND ', $sql);
+    }
+    
 }

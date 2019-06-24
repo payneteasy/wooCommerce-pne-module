@@ -1,10 +1,9 @@
 <?php
 namespace PaynetEasy\WoocommerceGateway;
 
-use PaynetEasy\PaynetEasyApi\PaymentData\QueryConfig;
-use PaynetEasy\PaynetEasyApi\PaymentProcessor;
-use PaynetEasy\PaynetEasyApi\Transport\CallbackResponse;
-use PaynetEasy\PaynetEasyApi\Transport\Response;
+use PaynetEasy\PaynetEasyApi\Exception\ValidationException;
+use PaynetEasy\PaynetEasyApi\Strategies\LoggerInterface;
+use PaynetEasy\PaynetEasyApi\Strategies\Transaction;
 
 class Gateway                       extends     \WC_Payment_Gateway
                                     implements  LoggerInterface
@@ -18,6 +17,11 @@ class Gateway                       extends     \WC_Payment_Gateway
      * @var \WC_Logger
      */
     protected $logger;
+    
+    /**
+     * @var WCIntegration
+     */
+    protected $wc_integration;
 
     public function __construct()
     {
@@ -50,7 +54,7 @@ class Gateway                       extends     \WC_Payment_Gateway
             'multiple_subscriptions',
         ];
         */
-        $this->supports             = ['products'];
+        $this->supports             = ['products', 'refunds'];
 
         // Load the form fields
         $this->init_form_fields();
@@ -69,10 +73,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         {
             $this->description      = $this->settings['description'];
         }
-
-        // has fields mode is on only for Credit Card
-        $this->has_fields           = $this->define_integration_method() === PaymentTransaction::METHOD_INLINE;
-
+        
         // This action hook saves the settings
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options'] );
 
@@ -81,10 +82,18 @@ class Gateway                       extends     \WC_Payment_Gateway
 
         // Register a webhook here
         // http://domain.com/wc-api/{webhook name}/
+        // example:
+        // http://woo.pne.io/wc-api/paynet-easy-gateway_callback/
+        // https://woo.pne.io/?wc-api=payneteasy_callback
         add_action('woocommerce_api_'.$this->id.'_callback', [$this, 'on_callback']);
         add_action('woocommerce_api_'.$this->id.'_redirect', [$this, 'on_redirect']);
         // Checkout filters
         add_filter( 'woocommerce_checkout_fields' , [$this, 'on_checkout_fields']);
+        
+        $this->wc_integration       = new WCIntegration($this->id, $this->settings, $this);
+    
+        // has fields mode is on only for Credit Card
+        $this->has_fields           = $this->wc_integration->defineIntegrationMethod() === Transaction::METHOD_INLINE;
     }
 
     public function image_url($file)
@@ -123,36 +132,28 @@ class Gateway                       extends     \WC_Payment_Gateway
 
     public function validate_fields()
     {
-        // Checking data only for sale (credit card inline form)
-        if($this->define_integration_method() !== PaymentTransaction::METHOD_INLINE)
+        try
         {
-            return true;
-        }
-
-        // Check fields
-        $required                   =
-        [
-            //'billing_phone'         => __('Phone', 'paynet-easy-gateway'),
-            'card_printed_name'     => __('Printed name', 'paynet-easy-gateway'),
-            'credit_card_number'    => __('Card number', 'paynet-easy-gateway'),
-            'expire_month'          => __('Expire month', 'paynet-easy-gateway'),
-            'expire_year'           => __('Expire year', 'paynet-easy-gateway'),
-            'cvv2'                  => __('Cvv', 'paynet-easy-gateway')
-        ];
-
-        $no_errors                  = true;
-
-        foreach ($required as $name => $title)
-        {
-            if(empty($_REQUEST[$name]) || empty(trim($_REQUEST[$name])))
+            $errors                 = $this->wc_integration->validateData($_REQUEST);
+            
+            if(empty($errors))
             {
-                $no_errors          = true;
-                /* Translators: %s is field name */
-                wc_add_notice(sprintf( __( 'Required "%s" field', 'paynet-easy-gateway'), $title), 'error');
+                return true;
             }
+    
+            foreach ($errors as $error)
+            {
+                wc_add_notice($error, 'error');
+            }
+            
+            return false;
         }
-
-        return $no_errors;
+        catch (\Exception $exception)
+        {
+            wc_add_notice(__('Validation error', 'paynet-easy-gateway'), 'error');
+            
+            return false;
+        }
     }
 
     /**
@@ -166,31 +167,7 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function process_payment($order_id)
     {
-        $this->debug($order_id.': Start processing payment');
-
-        // Init Payment Processor
-        $payment_processor          = $this->create_payment_processor();
-        $transaction                = new PaymentTransaction
-        (PaymentTransaction::NEW_TRANSACTION,
-            $order_id,
-            $this->define_integration_method($order_id)
-        );
-
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // not create two transaction in twice
-        if($transaction->is_processing())
-        {
-            $this->debug($order_id.": Find processing transaction {$transaction->transaction_id()}");
-            $payment_processor->executeQuery('status', $transaction);
-        }
-        else
-        {
-            $this->debug($order_id.": Start process transaction {$transaction->transaction_id()}");
-            $payment_processor->executeQuery($transaction->define_payment_method(), $transaction);
-        }
-
-        $transaction->handle_transaction()->save_transaction();
+        $transaction                = $this->wc_integration->startPayment($order_id);
 
         // Redirect to the thank you page
         return
@@ -201,40 +178,29 @@ class Gateway                       extends     \WC_Payment_Gateway
     }
 
     /**
-     * @param $transaction_id
-     *
-     * @return PaymentTransaction
+     * @return Transaction
      *
      * @throws \Exception
      */
-    public function handle_progress($transaction_id)
+    public function handle_progress()
     {
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->executeQuery('status', $transaction);
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
-        return $transaction;
+        return $this->wc_integration->processPayment();
     }
 
-    public function define_redirect_for_transaction(PaymentTransaction $transaction)
+    public function define_redirect_for_transaction(Transaction $transaction)
     {
-        $transaction_id             = $transaction->transaction_id();
-
-        // default redirect to order
-        $redirect                   = $this->get_return_url($transaction->get_order());
-
+        $transaction_id             = $transaction->getTransactionId();
+        
         // If processing
         if($transaction->isProcessing())
         {
             // or redirect or order page
-            $redirect               = $transaction->get_redirect_url() ?? $this->get_process_page_url($transaction_id);
+            $redirect               = $transaction->getRedirectUrl() ?? $this->wc_integration->getProcessPageUrl($transaction_id);
+        }
+        else
+        {
+            // default redirect to order
+            $redirect               = $this->get_return_url(wc_get_order($transaction->getOrderId()));
         }
 
         return $redirect;
@@ -249,47 +215,7 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function on_callback()
     {
-        $this->log('Detect callback using');
-
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect callback using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect callback using with wrong "orderid" = '.$paynet_order_id);
-        }
-
-        $this->log('Detect callback using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('CALLBACK has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processPaynetEasyCallback
-        (
-            new CallbackResponse($_REQUEST),
-            $transaction
-        );
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
-        return 1;
+        return $this->wc_integration->processCallback();
     }
 
     /**
@@ -301,45 +227,8 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function on_redirect()
     {
-        // try to find by $paynet_order_id
-        if(empty($_REQUEST['orderid']))
-        {
-            $this->log('Detect redirect_url using with empty "orderid"');
-            return -1;
-        }
-
-        $paynet_order_id            = $_REQUEST['orderid'];
-        $transaction_id             = PaymentTransaction::find_by_paynet_order_id($paynet_order_id);
-
-        if(empty($transaction_id))
-        {
-            $this->error('Detect redirect_url using with wrong "orderid" = '.$paynet_order_id);
-            return -2;
-        }
-
-        $this->log('Detect redirect_url using with CORRECT "orderid" = '.$paynet_order_id);
-
-        // 1. Init transaction
-        $transaction                = new PaymentTransaction($transaction_id);
-        $transaction->assign_logger($this)->setQueryConfig($this->get_query_config());
-
-        // notice
-        $transaction->get_order()->add_order_note
-        (
-            __('REDIRECT has been received', 'paynet-easy-gateway').' (paynet id = '.$paynet_order_id.')'
-        );
-
-        // 2. Execute query
-        $payment_processor          = $this->create_payment_processor();
-        $payment_processor->processCustomerReturn
-        (
-            new CallbackResponse($_REQUEST),
-            $transaction
-        );
-
-        // 3. Handle results
-        $transaction->handle_transaction()->save_transaction();
-
+        $transaction            = $this->wc_integration->processRedirect();
+        
         $redirect               = $this->define_redirect_for_transaction($transaction);
 
         if($redirect !== null)
@@ -352,193 +241,16 @@ class Gateway                       extends     \WC_Payment_Gateway
 
     public function can_refund_order($order)
     {
-        return parent::can_refund_order($order); // TODO: Change the autogenerated stub
+        return true;
     }
 
     public function process_refund($order_id, $amount = null, $reason = '')
     {
-        return parent::process_refund($order_id, $amount, $reason); // TODO: Change the autogenerated stub
+        $transaction                = $this->wc_integration->startRefund($order_id, $amount, $reason);
+        
+        return true;
     }
-
-    /**
-     * Saving transaction handler
-     * (in this case only save response in the transaction)
-     *
-     * @param PaymentTransaction $transaction
-     * @param Response $response
-     */
-    public function on_save_transaction(PaymentTransaction $transaction, Response $response = null)
-    {
-        if($response !== null)
-        {
-            $transaction->set_response($response);
-        }
-    }
-
-    /**
-     * @return \PaynetEasy\PaynetEasyApi\PaymentProcessor
-     */
-    protected function create_payment_processor()
-    {
-        $handlers                   =
-        [
-            PaymentProcessor::HANDLER_SAVE_CHANGES => [$this, 'on_save_transaction']
-        ];
-
-        $payment_processor          = new PaymentProcessor($handlers);
-
-        return $payment_processor;
-    }
-
-    /**
-     * Define a payment method: sale or form
-     *
-     * @param       string      $order_id
-     * @return      string
-     */
-    protected function define_integration_method($order_id = null)
-    {
-        if(!empty($this->settings['integration_method']))
-        {
-            return $this->settings['integration_method'];
-        }
-
-        // default payment method
-        return 'sale';
-    }
-
-    /**
-     * @return QueryConfig
-     */
-    protected function get_query_config()
-    {
-        /**
-         * Точка входа для аккаунта мерчанта, выдается при подключении
-         */
-        $end_point                  = $this->get_end_point();
-        $end_point_group            = $this->get_end_point_group();
-
-        $config                     =
-        [
-            /**
-             * Логин мерчанта, выдается при подключении
-             */
-            'login'                 => $this->get_paynet_login(),
-            /**
-             * Ключ мерчанта для подписывания запросов, выдается при подключении
-             */
-            'signing_key'           => $this->get_merchant_control(),
-            /**
-             * URL на который пользователь будет перенаправлен после окончания запроса
-             */
-            'redirect_url'          => $this->get_redirect_url(),
-            /**
-             * URL на который пользователь будет перенаправлен после окончания запроса
-             */
-            'callback_url'          => $this->get_callback_url(),
-            /**
-             * Режим работы библиотеки: sandbox, production
-             */
-            'gateway_mode'          => $this->get_gateway_mode(),
-            /**
-             * Ссылка на шлюз PaynetEasy для режима работы sandbox
-             */
-            'gateway_url_sandbox'   => $this->settings['gateway_url_sandbox'] ?? null,
-            /**
-             * Ссылка на шлюз PaynetEasy для режима работы production
-             */
-            'gateway_url_production' => $this->settings['gateway_url'] ?? ''
-        ];
-
-        if(!empty($end_point_group))
-        {
-            $config['end_point_group']  = $end_point_group;
-        }
-        else
-        {
-            $config['end_point']        = $end_point;
-        }
-
-        return new QueryConfig($config);
-    }
-
-    /**
-     * @return string
-     */
-    protected function get_end_point()
-    {
-        $result                     = $this->is_sandbox_mode() ?
-                                    $this->settings['sandbox_end_point'] : $this->settings['end_point'];
-
-        return $result ?? $this->settings['end_point'];
-    }
-
-    /**
-     * @return string
-     */
-    protected function get_end_point_group()
-    {
-        $result                     = $this->is_sandbox_mode() ?
-                                    $this->settings['sandbox_end_point_group'] : $this->settings['end_point_group'];
-
-        return $result ?? $this->settings['end_point_group'];
-    }
-
-    /**
-     * @return string
-     */
-    protected function get_paynet_login()
-    {
-        $result                     = $this->is_sandbox_mode() ?
-                                    $this->settings['sandbox_login'] : $this->settings['login'];
-
-        return $result ?? $this->settings['login'];
-    }
-
-    /**
-     * @return string
-     */
-    protected function get_merchant_control()
-    {
-        $result                     = $this->is_sandbox_mode() ?
-                                      $this->settings['sandbox_merchant_control'] : $this->settings['merchant_control'];
-
-        return $result ?? $this->settings['merchant_control'];
-    }
-
-    protected function get_redirect_url()
-    {
-        return add_query_arg(['wc-api' => $this->id.'_redirect'], home_url('/'));
-    }
-
-    protected function get_callback_url()
-    {
-        return add_query_arg(['wc-api' => $this->id.'_callback'], home_url('/'));
-    }
-
-    /**
-     * @param   string      $transaction_id
-     * @param   array       $ex_params
-     * @return  string
-     */
-    protected function get_process_page_url($transaction_id, array $ex_params = [])
-    {
-        $ex_params[PAYNET_EASY_PAGE]    = 1;
-        $ex_params['transaction_id']    = $transaction_id;
-
-        return add_query_arg($ex_params, home_url('/'));
-    }
-
-    protected function is_sandbox_mode()
-    {
-        return !empty($this->settings['test_mode']) && $this->settings['test_mode'] === 'yes';
-    }
-
-    protected function get_gateway_mode()
-    {
-        return $this->is_sandbox_mode() ? QueryConfig::GATEWAY_MODE_SANDBOX : QueryConfig::GATEWAY_MODE_PRODUCTION;
-    }
-
+    
     /**
      * Logging method
      *
@@ -573,7 +285,12 @@ class Gateway                       extends     \WC_Payment_Gateway
     {
         return $this->log($message, \WC_Log_Levels::ERROR);
     }
-
+    
+    public function notice($message)
+    {
+        return $this->log($message, \WC_Log_Levels::NOTICE);
+    }
+    
     /**
      * Initialize Gateway Settings form fields
      *
@@ -715,7 +432,7 @@ class Gateway                       extends     \WC_Payment_Gateway
     public function payment_fields()
     {
         // you can instructions for test mode, I mean test card numbers etc.
-        if ($this->is_sandbox_mode())
+        if ($this->wc_integration->isSandboxMode())
         {
             // let's display some description before the payment form
             if (empty($this->description))
@@ -731,7 +448,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         }
 
         // add to description form instruction
-        if($this->define_integration_method() === PaymentTransaction::METHOD_FORM)
+        if($this->wc_integration->defineIntegrationMethod() === Transaction::METHOD_FORM)
         {
             if(!is_string($this->description))
             {
@@ -774,7 +491,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         $expiry_year_value          = '';
         $cvv2_value                 = '';
 
-        if($this->is_sandbox_mode())
+        if($this->wc_integration->isSandboxMode())
         {
             // test data
             $card_number_value      = '4444555566661111';

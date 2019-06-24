@@ -1,14 +1,14 @@
 <?php
-namespace PaynetEasy\WoocommerceGateway;
+namespace PaynetEasy\PaynetEasyApi\Strategies;
 
 /**
  * Interface LoggerInterface
  *
- * @package PaynetEasy\WoocommerceGateway
+ * @package PaynetEasy\PaynetEasyApi\Strategies
  */
 interface LoggerInterface
 {
-    public function log($message, $level);
+    public function notice($message);
     public function debug($message);
     public function error($message);
 }

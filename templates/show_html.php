@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $payneteasy_transaction             = get_query_var('payneteasy_transaction');
 
-if($payneteasy_transaction instanceof \PaynetEasy\WoocommerceGateway\PaymentTransaction)
+if($payneteasy_transaction instanceof \PaynetEasy\PaynetEasyApi\Strategies\Transaction)
 {
-    echo $payneteasy_transaction->get_html_for_show();
+    echo $payneteasy_transaction->getHtml();
 }

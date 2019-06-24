@@ -1,6 +1,7 @@
 <?php
 namespace PaynetEasy\PaynetEasyApi\Transport;
 
+use PaynetEasy\PaynetEasyApi\PaymentData\PaymentTransaction;
 use PaynetEasy\PaynetEasyApi\Transport\Response;
 
 /**
@@ -11,6 +12,16 @@ use PaynetEasy\PaynetEasyApi\Transport\Response;
  */
 class CallbackResponse extends Response
 {
+    /**
+     * Return TRUE if callback is REVERSAL or CHARGEBACK
+     *
+     * @return bool
+     */
+    public function isReversal()
+    {
+        return in_array($this->getType(), [PaymentTransaction::REVERSAL, PaymentTransaction::CHARGEBACK]);
+    }
+    
     /**
      * Get payment amount
      *

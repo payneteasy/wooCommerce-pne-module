@@ -30,7 +30,7 @@ class WordPressPlugin
   `paynet_order_id` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'Order id assigned to the order by PaynetEasy',
   `mode` enum('production','sandbox') NOT NULL DEFAULT 'production',
   `operation` varchar(255) NOT NULL DEFAULT '',
-  `transaction_type` enum('sale','reversal','capture','preauth') NOT NULL DEFAULT 'sale' COMMENT 'Transaction type',
+  `transaction_type` enum('sale','reversal','capture','preauth','return') NOT NULL DEFAULT 'sale' COMMENT 'Transaction type',
   `integration_method` enum('inline','form') NOT NULL DEFAULT 'inline' COMMENT 'The method to show card form',
   `payment_method` varchar(32) NOT NULL DEFAULT '',
   `state` enum('new','processing','done') NOT NULL DEFAULT 'new' COMMENT 'State of transaction',
@@ -134,17 +134,15 @@ class WordPressPlugin
     }
 
     /**
-     * Include file /languages/plugin_basename.pot file
-     *
      * @return $this
      */
     public function define_locale()
     {
         load_plugin_textdomain
         (
-            $this->plugin_basename,
+            'paynet-easy-gateway',
             false,
-            $this->plugin_dir.'/languages/'
+            dirname($this->plugin_basename).'/languages/'
         );
 
         return $this;
@@ -219,17 +217,17 @@ class WordPressPlugin
      */
     public function on_template_include($template)
     {
-        if(empty($_REQUEST[PAYNET_EASY_PAGE]) || empty($_REQUEST['transaction_id']))
+        if(empty($_REQUEST[PAYNET_EASY_PAGE]))
         {
             return $template;
         }
 
         $gateway                    = new Gateway();
-        $transaction                = $gateway->handle_progress($_REQUEST['transaction_id']);
+        $transaction                = $gateway->handle_progress();
         $redirect                   = null;
 
         // If transaction is done
-        if(false === $transaction->isProcessing() || $transaction->is_redirect())
+        if(false === $transaction->isProcessing() || $transaction->isRedirect())
         {
             $redirect               = $gateway->define_redirect_for_transaction($transaction);
 
@@ -244,7 +242,7 @@ class WordPressPlugin
         set_query_var('payneteasy_transaction', $transaction);
 
         // Show HTML for 3D if needed
-        if($transaction->get_html_for_show() !== null)
+        if(!empty($transaction->getHtml()))
         {
             return $this->plugin_dir.'/templates/show_html.php';
         }

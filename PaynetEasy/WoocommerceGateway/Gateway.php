@@ -82,6 +82,9 @@ class Gateway                       extends     \WC_Payment_Gateway
 
         // Register a webhook here
         // http://domain.com/wc-api/{webhook name}/
+        // example:
+        // http://woo.pne.io/wc-api/paynet-easy-gateway_callback/
+        // https://woo.pne.io/?wc-api=payneteasy_callback
         add_action('woocommerce_api_'.$this->id.'_callback', [$this, 'on_callback']);
         add_action('woocommerce_api_'.$this->id.'_redirect', [$this, 'on_redirect']);
         // Checkout filters

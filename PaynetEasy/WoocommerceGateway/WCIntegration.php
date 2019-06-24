@@ -462,6 +462,13 @@ class WCIntegration                 implements IntegrationInterface
     
         $order                      = wc_get_order($transaction->getOrderId());
         
+        // For empty order case
+        if(empty($order))
+        {
+            $this->logger->debug('definePaymentData detect empty order with order_id = '.$transaction->getOrderId());
+            return;
+        }
+        
         // Payment data for REVERSAL
         if($transaction->getTransactionType() === Transaction::REVERSAL)
         {

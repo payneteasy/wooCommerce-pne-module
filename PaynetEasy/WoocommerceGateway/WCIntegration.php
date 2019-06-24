@@ -282,6 +282,12 @@ class WCIntegration                 implements IntegrationInterface
         
         $order                      = wc_get_order($order_id);
         
+        // Auto comment for empty reason
+        if(empty($reason))
+        {
+            $reason                 = 'The user did not specify a comment';
+        }
+        
         $data                       =
         [
             'client_id'             => $transaction->getOrderId(),

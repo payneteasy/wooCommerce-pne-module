@@ -30,7 +30,7 @@ class WordPressPlugin
   `paynet_order_id` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'Order id assigned to the order by PaynetEasy',
   `mode` enum('production','sandbox') NOT NULL DEFAULT 'production',
   `operation` varchar(255) NOT NULL DEFAULT '',
-  `transaction_type` enum('sale','reversal','capture','preauth') NOT NULL DEFAULT 'sale' COMMENT 'Transaction type',
+  `transaction_type` enum('sale','reversal','capture','preauth','return') NOT NULL DEFAULT 'sale' COMMENT 'Transaction type',
   `integration_method` enum('inline','form') NOT NULL DEFAULT 'inline' COMMENT 'The method to show card form',
   `payment_method` varchar(32) NOT NULL DEFAULT '',
   `state` enum('new','processing','done') NOT NULL DEFAULT 'new' COMMENT 'State of transaction',

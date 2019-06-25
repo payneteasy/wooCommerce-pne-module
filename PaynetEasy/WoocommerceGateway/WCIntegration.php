@@ -159,7 +159,21 @@ class WCIntegration                 implements IntegrationInterface
         {
             $this->payment_strategy->execute();
     
+            // Check if transaction and  exists response
             $response                   = $this->payment_strategy->getResponse();
+            
+            if(empty($response))
+            {
+                $this->notice('Detect empty callback');
+                return -3;
+            }
+            
+            if(empty($this->payment_strategy->getTransaction()))
+            {
+                $this->notice('Detect callback without transaction');
+                return -4;
+            }
+            
             $status                     = $this->translateStatus($response->getStatus());
             $order_id                   = $this->payment_strategy->getTransaction()->getOrderId();
             $paynet_order_id            = $this->payment_strategy->getTransaction()->getResponse()->getPaymentPaynetId();
@@ -211,8 +225,21 @@ class WCIntegration                 implements IntegrationInterface
         try
         {
             $this->payment_strategy->execute();
-        
+    
             $response                   = $this->payment_strategy->getResponse();
+            
+            if(empty($response))
+            {
+                $this->notice('Detect empty redirect');
+                throw new \Exception('Detect empty redirect without response');
+            }
+    
+            if(empty($this->payment_strategy->getTransaction()))
+            {
+                $this->notice('Detect redirect without transaction');
+                throw new \Exception('Detect redirect without transaction');
+            }
+            
             $status                     = $this->translateStatus($response->getStatus());
             $order_id                   = $this->payment_strategy->getTransaction()->getOrderId();
             $paynet_order_id            = $this->payment_strategy->getTransaction()->getResponse()->getPaymentPaynetId();

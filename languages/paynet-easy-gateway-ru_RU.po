@@ -9,9 +9,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2019-02-27 13:32+0300\n"
-"PO-Revision-Date: 2019-02-27 14:10+0300\n"
-"X-Generator: Poedit 2.2.1\n"
+"POT-Creation-Date: 2019-06-25T10:37:41+00:00\n"
+"PO-Revision-Date: 2019-06-25 14:09+0300\n"
+"X-Generator: Poedit 2.2.3\n"
 "X-Domain: paynet-easy-gateway\n"
 "Last-Translator: \n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
@@ -47,250 +47,264 @@ msgstr "Visa Mastercard"
 msgid "PaynetEasy Gateway for Visa and Mastercard"
 msgstr "PaynetEasy платёжный шлюз для Visa и Mastercard"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:150
+#: PaynetEasy/WoocommerceGateway/Gateway.php:153
 msgid "Validation error"
 msgstr "Ошибка проверки"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:300
+#: PaynetEasy/WoocommerceGateway/Gateway.php:305
 msgid "Enable/Disable"
 msgstr "Вкл./Выкл."
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:301
+#: PaynetEasy/WoocommerceGateway/Gateway.php:306
 msgid "Enable"
 msgstr "Включено"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:307
+#: PaynetEasy/WoocommerceGateway/Gateway.php:312
 msgid "Title"
 msgstr "Заголовок"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:309
+#: PaynetEasy/WoocommerceGateway/Gateway.php:314
 msgid "This controls the title which the user sees during checkout."
 msgstr "Этот заголовок будет выводиться рядом с формой оплаты"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:310
+#: PaynetEasy/WoocommerceGateway/Gateway.php:315
 msgid "Credit Card"
 msgstr "Кредная карта"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:313
+#: PaynetEasy/WoocommerceGateway/Gateway.php:318
 msgid "Description"
 msgstr "Описание"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:315
+#: PaynetEasy/WoocommerceGateway/Gateway.php:320
 msgid "This controls the description which the user sees during checkout."
 msgstr "Этот текст будет выводиться на странице оплаты"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:319
+#: PaynetEasy/WoocommerceGateway/Gateway.php:324
 msgid "Sandbox test mode"
 msgstr "Тестовый режим"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:320
+#: PaynetEasy/WoocommerceGateway/Gateway.php:325
 msgid "Enable sandbox test mode"
 msgstr "Включить тестовый режим"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:322
+#: PaynetEasy/WoocommerceGateway/Gateway.php:327
 msgid "Place the payment gateway in development mode."
 msgstr "Тестовый режим работы шлюза"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:326
+#: PaynetEasy/WoocommerceGateway/Gateway.php:331
 msgid "Log level"
 msgstr "Режим журналов"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:342
+#: PaynetEasy/WoocommerceGateway/Gateway.php:347
 msgid "Integration Method"
 msgstr "Метод интеграции"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:346
+#: PaynetEasy/WoocommerceGateway/Gateway.php:351
 msgid ""
 "Accepting payment details and all this stuff is completely implemented on "
 "the PaynetEasy gateway side"
 msgstr ""
+"Accepting payment details and all this stuff is completely implemented on "
+"the PaynetEasy gateway side"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:348
+#: PaynetEasy/WoocommerceGateway/Gateway.php:353
 msgid "Inline form"
 msgstr "Встроенная форма"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:349
+#: PaynetEasy/WoocommerceGateway/Gateway.php:354
 msgid "Remote form"
 msgstr "Удалённая форма"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:353
+#: PaynetEasy/WoocommerceGateway/Gateway.php:358
 msgid "End point"
 msgstr "End Point"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:355
-#: PaynetEasy/WoocommerceGateway/Gateway.php:390
+#: PaynetEasy/WoocommerceGateway/Gateway.php:360
+#: PaynetEasy/WoocommerceGateway/Gateway.php:395
 msgid ""
 "The End point ID is an entry point for incoming Merchant’s transactions for "
 "single currency integration"
 msgstr ""
+"The End point ID is an entry point for incoming Merchant’s transactions for "
+"single currency integration"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:360
+#: PaynetEasy/WoocommerceGateway/Gateway.php:365
 msgid "End point group"
-msgstr ""
+msgstr "End Point group"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:362
-#: PaynetEasy/WoocommerceGateway/Gateway.php:397
+#: PaynetEasy/WoocommerceGateway/Gateway.php:367
+#: PaynetEasy/WoocommerceGateway/Gateway.php:402
 msgid ""
 "The End point group ID is an entry point for incoming Merchant’s "
 "transactions for multi currency integration"
 msgstr ""
+"The End point group ID is an entry point for incoming Merchant’s "
+"transactions for multi currency integration"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:367
+#: PaynetEasy/WoocommerceGateway/Gateway.php:372
 msgid "Login"
 msgstr "Логин"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:369
-#: PaynetEasy/WoocommerceGateway/Gateway.php:404
+#: PaynetEasy/WoocommerceGateway/Gateway.php:374
+#: PaynetEasy/WoocommerceGateway/Gateway.php:409
 msgid "Merchant login name"
 msgstr "Логин продавца в системе Paynet"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:374
+#: PaynetEasy/WoocommerceGateway/Gateway.php:379
 msgid "Control Key"
 msgstr "Секретный ключ"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:376
-#: PaynetEasy/WoocommerceGateway/Gateway.php:411
+#: PaynetEasy/WoocommerceGateway/Gateway.php:381
+#: PaynetEasy/WoocommerceGateway/Gateway.php:416
 msgid "Merchant control string for sign"
 msgstr "Секретный ключ для подписи (выдаётся продавцу)"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:381
+#: PaynetEasy/WoocommerceGateway/Gateway.php:386
 msgid "Gateway url"
 msgstr "URL шлюза"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:383
+#: PaynetEasy/WoocommerceGateway/Gateway.php:388
 msgid "Url for gateway"
 msgstr "Url для шлюза"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:388
+#: PaynetEasy/WoocommerceGateway/Gateway.php:393
 msgid "Sandbox End point"
-msgstr ""
+msgstr "End Point"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:395
+#: PaynetEasy/WoocommerceGateway/Gateway.php:400
 msgid "Sandbox End point group"
-msgstr ""
+msgstr "End Point group"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:402
+#: PaynetEasy/WoocommerceGateway/Gateway.php:407
 msgid "Sandbox Login"
-msgstr ""
+msgstr "Логин"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:409
+#: PaynetEasy/WoocommerceGateway/Gateway.php:414
 msgid "Sandbox Control Key"
-msgstr ""
+msgstr "Секретный ключ"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:416
+#: PaynetEasy/WoocommerceGateway/Gateway.php:421
 msgid "Gateway url sandbox"
-msgstr ""
+msgstr "Url для тестового шлюза"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:418
+#: PaynetEasy/WoocommerceGateway/Gateway.php:423
 msgid "Url for gateway sandbox"
-msgstr ""
+msgstr "Url для шлюза"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:453
+#: PaynetEasy/WoocommerceGateway/Gateway.php:458
 msgid ""
 "You will be redirected to a secure site for entering credit card information."
 msgstr "Вы будете перенаправлены для ввода кредитной карты"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:477
+#: PaynetEasy/WoocommerceGateway/Gateway.php:482
 msgid "Card Number"
 msgstr "Номер кредитной карты"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:478
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:72
+#: PaynetEasy/WoocommerceGateway/Gateway.php:483
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:74
 msgid "Printed name"
 msgstr "Имя владельца карты"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:479
+#: PaynetEasy/WoocommerceGateway/Gateway.php:484
 msgid "Expiry month"
 msgstr "Месяц"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:480
+#: PaynetEasy/WoocommerceGateway/Gateway.php:485
 msgid "Expiry year"
 msgstr "Год"
 
-#: PaynetEasy/WoocommerceGateway/Gateway.php:481
+#: PaynetEasy/WoocommerceGateway/Gateway.php:486
 msgid "Card Code (CVC)"
 msgstr "CVV код"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:73
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:75
 msgid "Card number"
 msgstr "Номер карты"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:74
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:76
 msgid "Expire month"
 msgstr "месяц"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:75
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:77
 msgid "Expire year"
 msgstr "год"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:76
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:78
 msgid "Cvv"
 msgstr "Cvv код"
 
 #. Translators: %s is field name
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:94
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:96
 msgid "Required \"%s\" field"
 msgstr "Поле %s обязательно"
 
 #. Translators: %s is field name
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:108
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:110
 msgid "The \"%s\" field is not valid"
 msgstr "Поле %s имеет ошибочный формат"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:168
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:184
 msgid "CALLBACK has been received with status"
 msgstr "CALLBACK был принят от сервера со статусом"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:192
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:245
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:208
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:274
 msgid "CALLBACK error: "
 msgstr "CALLBACK ошибка"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:221
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:250
 msgid "REDIRECT has been received with status"
 msgstr "REDIRECT был принят со статусом"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:594
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:598
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:700
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:704
 msgid "Payment declined"
-msgstr "Платёж откланён"
+msgstr "Платёж отклонён"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:620
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:726
 msgid "Payment approved"
 msgstr "Платёж подветрждён"
 
 #. Translators: It's status for order notes
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:645
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:649
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:653
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:751
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:755
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:759
 msgid "Payment processing"
 msgstr "Платёж обрабатывается"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:659
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:765
 msgid "Error during payment processing"
 msgstr "Ошибка во время обработки транзакции"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1045
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:800
+msgid "Payment chargeback"
+msgstr "Возврат платежа (chargeback)"
+
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:804
+msgid "Payment reversal"
+msgstr "Отмена платежа (reversal)"
+
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1181
 msgid "approved"
 msgstr "принято"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1046
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1182
 msgid "declined"
-msgstr "откланено"
+msgstr "отклонено"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1047
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1183
 msgid "error"
 msgstr "ошибка"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1048
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1184
 msgid "filtered"
 msgstr "фильтр"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1049
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1185
 msgid "processing"
 msgstr "обработка"
 
-#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1050
+#: PaynetEasy/WoocommerceGateway/WCIntegration.php:1186
 msgid "unknown"
 msgstr "неизвестно"
 

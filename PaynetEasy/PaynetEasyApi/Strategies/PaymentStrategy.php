@@ -174,6 +174,7 @@ class PaymentStrategy
             $this->integration->debug("Detect reversal callback");
             
             // If current transaction has same type with callback
+            // nothing to do
             if($this->transaction !== null && $this->transaction->getTransactionType() === $this->callback->getType())
             {
                 return;

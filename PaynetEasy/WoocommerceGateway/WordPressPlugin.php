@@ -38,7 +38,7 @@ class WordPressPlugin
   `date_create` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `date_update` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `login` varchar(255) NOT NULL DEFAULT '',
-  `end_point` varchar(255) NOT NULL DEFAULT '' COMMENT 'Merchant end point',
+  `end_point` varchar(255) DEFAULT '' COMMENT 'Merchant end point',
   `end_point_group` varchar(255) DEFAULT '',
   `gateway_url` varchar(255) NOT NULL DEFAULT '',
   `html` text COMMENT 'html data from paynet',

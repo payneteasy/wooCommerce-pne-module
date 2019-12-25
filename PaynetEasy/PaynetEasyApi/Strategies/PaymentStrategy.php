@@ -352,6 +352,9 @@ class PaymentStrategy
     
     protected function handleTransaction()
     {
+        // early save transaction
+        $this->integration->saveTransaction($this->transaction);
+
         if($this->transaction->isDeclined() || $this->transaction->isError())
         {
             $this->handleError();
@@ -365,7 +368,7 @@ class PaymentStrategy
             $this->handleProcess();
         }
     
-        // save modifications
+        // save final modifications
         $this->integration->saveTransaction($this->transaction);
     }
     

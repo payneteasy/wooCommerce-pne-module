@@ -167,7 +167,6 @@ class WordPressPlugin
     {
         //add_filter('do_parse_request', [$this, 'on_parse_request']);
         add_filter('template_include', [$this, 'on_template_include']);
-        add_action( 'woocommerce_email_order_details', [$this, 'on_email_payment_details'], 10, 4 );
     }
 
     public function on_activate()
@@ -272,48 +271,6 @@ class WordPressPlugin
         wp_enqueue_script('jquery');
         // return progress template
         return $this->plugin_dir.'/templates/progress.php';
-    }
-
-    /**
-     * Out extra data for email
-     *
-     * Hooked into `woocommerce_email_order_details` action hook.
-     *
-     * @param WP_Order $order         Order data.
-     * @param bool     $sent_to_admin Send to admin (default: false).
-     * @param bool     $plain_text    Plain text email (default: false).
-     */
-    public function on_email_payment_details($order, $sent_to_admin = false, $plain_text = false)
-    {
-        if ($plain_text || ! is_a( $order, 'WC_Order' )) {
-            return;
-        }
-
-        $merchant_name              = '';
-        $merchant_country           = '';
-        $merchant_online_address    = '';
-        $rrn                        = '';
-        $authorization_code         = '';
-        $transaction_type           = '';
-        $card_final_4_digits        = '';
-        $refund_policy              = '';
-        $customer_service_contact   = '';
-
-?>
-        <h3>Payment details</h3>
-        <ul>
-            <li><b>Merchant Name</b>: <?=$merchant_name?></li>
-            <li><b>Merchant Country</b>: <?=$merchant_country?></li>
-            <li><b>Merchant online address</b>: <?=$merchant_online_address?></li>
-            <li><b>Retrieval Reference Number</b>: <?=$rrn?></li>
-            <li><b>Authorization code</b>: <?=$authorization_code?></li>
-            <li><b>Transaction type</b>: <?=$transaction_type?></li>
-            <li><b>Card number, the final 4 digits</b>: <?=$card_final_4_digits?></li>
-            <li><b>Return/refund policy</b>: <?=$refund_policy?></li>
-            <li><b>Customer service contact</b>: <?=$customer_service_contact?></li>
-        </ul>
-<?php
-
     }
 
     /**

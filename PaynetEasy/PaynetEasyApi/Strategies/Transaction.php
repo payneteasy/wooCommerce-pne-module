@@ -67,6 +67,14 @@ class Transaction          extends PaymentTransaction
      * @var IntegrationInterface
      */
     protected $integrator;
+
+    /**
+     * additional transaction data that the server sent in the callback.
+     * when the transaction was successful (or not successful) completed.
+     *
+     * @var array
+     */
+    protected $callbackData              = [];
     
     /**
      * Transaction constructor.
@@ -281,5 +289,29 @@ class Transaction          extends PaymentTransaction
         }
         
         return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCallbackData(): array
+    {
+        if(!is_array($this->callbackData))
+        {
+            return [];
+        }
+
+        return $this->callbackData;
+    }
+
+    /**
+     * @param array $callbackData
+     * @return Transaction
+     */
+    public function setCallbackData(array $callbackData): Transaction
+    {
+        $this->callbackData         = $callbackData;
+
+        return $this;
     }
 }

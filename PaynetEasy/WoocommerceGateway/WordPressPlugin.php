@@ -42,7 +42,7 @@ class WordPressPlugin
   `end_point_group` varchar(255) DEFAULT '',
   `gateway_url` varchar(255) NOT NULL DEFAULT '',
   `html` text COMMENT 'html data from paynet',
-  `payment_data` text COMMENT 'Data of payment when payment done (callback data)',
+  `callback_data` text COMMENT 'Data of payment when payment done (callback data)',
   `errors` text,
   PRIMARY KEY (`transaction_id`),
   KEY `order_id` (`order_id`),

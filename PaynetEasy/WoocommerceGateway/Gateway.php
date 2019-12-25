@@ -337,7 +337,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         $merchant_name              = get_option('woocommerce_store_address');
         $merchant_country           = $this->get_merchant_country();
         $merchant_online_address    = get_site_url();
-        $rrn                        = !empty($data['processor-rrn']) ?? $data['processor-rrn'] ? : '';
+        $rrn                        = !empty($data['processor-rrn']) ? $data['processor-rrn'] : '';
         $authorization_code         = implode(', ', $authorization_code);
         $transaction_type           = !empty($data['card-type']) ? $data['card-type'] : '';
         $card_final_4_digits        = !empty($data['last-four-digits']) ? $data['last-four-digits'] : '';

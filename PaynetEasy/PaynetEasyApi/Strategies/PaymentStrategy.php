@@ -361,6 +361,12 @@ class PaymentStrategy
         }
         elseif($this->transaction->isApproved())
         {
+            if($this->action === self::ACTION_REDIRECT)
+            {
+                // nothing to do
+                return;
+            }
+
             $this->handleApprove();
         }
         elseif($this->transaction->isProcessing())

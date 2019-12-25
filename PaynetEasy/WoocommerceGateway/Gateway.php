@@ -254,6 +254,32 @@ class Gateway                       extends     \WC_Payment_Gateway
     }
 
     /**
+     * @return string
+     */
+    public function get_merchant_country()
+    {
+        $merchant_country           = get_option('woocommerce_default_country');
+
+        if(empty($merchant_country))
+        {
+            return '';
+        }
+
+        // country + state
+        $merchant_country           = explode(':', $merchant_country);
+
+        // Country and state separated:
+        $merchant_country           = $merchant_country[0];
+
+        if(!empty($merchant_country) & !empty(WC()->countries->countries[$merchant_country]))
+        {
+            return WC()->countries->countries[$merchant_country];
+        }
+
+        return '';
+    }
+
+    /**
      * Out extra data for email
      *
      * Hooked into `woocommerce_email_order_details` action hook.
@@ -308,20 +334,8 @@ class Gateway                       extends     \WC_Payment_Gateway
 
         $WC_Email                   = new \WC_Email();
 
-        $merchant_country           = get_option('woocommerce_default_country');
-
-        if(!empty($merchant_country) & !empty(WC()->countries->countries[$merchant_country]))
-        {
-            $merchant_country       = WC()->countries->countries[$merchant_country];
-        }
-
-        if(empty($merchant_country))
-        {
-            $merchant_country       = '';
-        }
-
         $merchant_name              = get_option('woocommerce_store_address');
-        $merchant_country           = get_option('woocommerce_default_country');
+        $merchant_country           = $this->get_merchant_country();
         $merchant_online_address    = get_site_url();
         $rrn                        = !empty($data['processor-rrn']) ?? $data['processor-rrn'] ? : '';
         $authorization_code         = implode(', ', $authorization_code);
@@ -336,7 +350,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         <ul>
             <li><b>Merchant Name</b>: <?=$merchant_name?></li>
             <li><b>Merchant Country</b>: <?=$merchant_country?></li>
-            <li><b>Merchant online address</b>: <?=$merchant_online_address?></li>
+            <li><b>Merchant online address</b>: <a href="<?=$merchant_online_address?>"><?=$merchant_online_address?></a></li>
             <li><b>Retrieval Reference Number</b>: <?=$rrn?></li>
             <li><b>Authorization code</b>: <?=$authorization_code?></li>
             <li><b>Transaction type</b>: <?=$transaction_type?></li>

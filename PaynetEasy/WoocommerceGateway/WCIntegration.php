@@ -242,7 +242,16 @@ class WCIntegration                 implements IntegrationInterface
             
             $status                     = $this->translateStatus($response->getStatus());
             $order_id                   = $this->payment_strategy->getTransaction()->getOrderId();
-            $paynet_order_id            = $this->payment_strategy->getTransaction()->getResponse()->getPaymentPaynetId();
+
+            $response                   = $this->payment_strategy->getTransaction()->getResponse();
+
+            // empty response nothing to do
+            if(empty($response))
+            {
+                return $this->payment_strategy->getTransaction();
+            }
+
+            $paynet_order_id            = $response->getPaymentPaynetId();
         
             // notice
             wc_get_order($order_id)->add_order_note
@@ -399,7 +408,24 @@ class WCIntegration                 implements IntegrationInterface
                 $transaction->setErrors($errors);
             }
         }
-        
+
+        // restore callback data from JSON format and normalize
+        $callbackData               = [];
+
+        if(!empty($result['callback_data']))
+        {
+            $callbackData          = json_decode($result['callback_data'], true);
+
+            if(!is_array($callbackData))
+            {
+                $callbackData       = [];
+            }
+
+            $result['callback_data'] = $callbackData;
+        }
+
+        $transaction->setCallbackData($callbackData);
+
         return $transaction;
     }
     
@@ -448,7 +474,13 @@ class WCIntegration                 implements IntegrationInterface
         {
             $data['html']           = $response->getHtml();
         }
-    
+
+        // save response from server when done
+        if($response instanceof Response)
+        {
+            $data['callback_data']  = json_encode($response->getArrayCopy(), JSON_PRETTY_PRINT);
+        }
+
         if($transaction->getTransactionId() !== null)
         {
             $data['date_update']    = date('Y-m-d H:i:s');

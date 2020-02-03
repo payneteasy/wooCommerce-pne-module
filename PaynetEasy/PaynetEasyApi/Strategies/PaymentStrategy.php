@@ -116,7 +116,10 @@ class PaymentStrategy
         
         return $this->response;
     }
-    
+
+    /**
+     * @throws \Exception
+     */
     public function execute()
     {
         try
@@ -137,7 +140,11 @@ class PaymentStrategy
         catch (\Exception $exception)
         {
             $this->handleException($exception);
-            return;
+            // remove components
+            $this->response         = null;
+            $this->transaction      = null;
+
+            throw $exception;
         }
         
         $this->outResponse();
@@ -285,6 +292,16 @@ class PaymentStrategy
         elseif ($this->action === self::ACTION_REDIRECT)
         {
             $this->integration->debug($this->orderId.": Detect redirect for transaction {$this->transaction->getTransactionId()}");
+
+            // When the transaction has been processed, but redirect happened
+            // Check that case
+            if(!$this->transaction->isProcessing())
+            {
+                $this->response = $this->callback;
+                $this->transaction->setResponse($this->response);
+                return;
+            }
+
             $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
         }
         elseif ($this->transaction->isProcessing())
@@ -335,12 +352,21 @@ class PaymentStrategy
     
     protected function handleTransaction()
     {
+        // early save transaction
+        $this->integration->saveTransaction($this->transaction);
+
         if($this->transaction->isDeclined() || $this->transaction->isError())
         {
             $this->handleError();
         }
         elseif($this->transaction->isApproved())
         {
+            if($this->action === self::ACTION_REDIRECT)
+            {
+                // nothing to do
+                return;
+            }
+
             $this->handleApprove();
         }
         elseif($this->transaction->isProcessing())
@@ -348,7 +374,7 @@ class PaymentStrategy
             $this->handleProcess();
         }
     
-        // save modifications
+        // save final modifications
         $this->integration->saveTransaction($this->transaction);
     }
     
@@ -387,7 +413,7 @@ class PaymentStrategy
     
     protected function handleException(\Exception $exception)
     {
-        $this->integration->error('Exception: '.$exception->getTraceAsString());
+        $this->integration->error('Exception: '.$exception->getMessage()."\n".$exception->getTraceAsString());
         
         if($this->transaction !== null)
         {

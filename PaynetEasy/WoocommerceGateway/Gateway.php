@@ -89,6 +89,8 @@ class Gateway                       extends     \WC_Payment_Gateway
         add_action('woocommerce_api_'.$this->id.'_redirect', [$this, 'on_redirect']);
         // Checkout filters
         add_filter( 'woocommerce_checkout_fields' , [$this, 'on_checkout_fields']);
+        // email filters
+        add_action( 'woocommerce_email_order_details', [$this, 'on_email_payment_details'], 10, 4);
         
         $this->wc_integration       = new WCIntegration($this->id, $this->settings, $this);
     
@@ -250,7 +252,117 @@ class Gateway                       extends     \WC_Payment_Gateway
         
         return true;
     }
-    
+
+    /**
+     * @return string
+     */
+    public function get_merchant_country()
+    {
+        $merchant_country           = get_option('woocommerce_default_country');
+
+        if(empty($merchant_country))
+        {
+            return '';
+        }
+
+        // country + state
+        $merchant_country           = explode(':', $merchant_country);
+
+        // Country and state separated:
+        $merchant_country           = $merchant_country[0];
+
+        if(!empty($merchant_country) & !empty(WC()->countries->countries[$merchant_country]))
+        {
+            return WC()->countries->countries[$merchant_country];
+        }
+
+        return '';
+    }
+
+    /**
+     * Out extra data for email
+     *
+     * Hooked into `woocommerce_email_order_details` action hook.
+     *
+     * @param WC_Order $order         Order data.
+     * @param bool     $sent_to_admin Send to admin (default: false).
+     * @param bool     $plain_text    Plain text email (default: false).
+     * @throws \Exception
+     */
+    public function on_email_payment_details($order, $sent_to_admin = false, $plain_text = false)
+    {
+        if ($plain_text || ! is_a( $order, 'WC_Order' )) {
+            return;
+        }
+
+        /**
+         * @var $order \WC_Order
+         */
+        // Find transaction for current order:
+        $transaction                = $this->wc_integration->findTransactionByOrderId(
+            $order->get_id(), ['transaction_type' => 'sale', 'state' => Transaction::STATE_PROCESSING]
+        );
+
+        // If transaction not exists nothing to do
+        if(empty($transaction)) {
+            return;
+        }
+
+        /**
+         * @var $transaction Transaction
+         */
+        $data                       = $transaction->getCallbackData();
+
+        if(empty($data)) {
+            return;
+        }
+
+        $status                     = !empty($data['status']) ? ucfirst($data['status']) : '';
+        $approval_code              = !empty($data['approval-code']) ? $data['approval-code'] : '';
+
+        $authorization_code         = [];
+
+        if(!empty($status))
+        {
+            $authorization_code[]   = $status;
+        }
+
+        if(!empty($approval_code))
+        {
+            $authorization_code[]   = $approval_code;
+        }
+
+        $WC_Email                   = new \WC_Email();
+
+        $merchant_name              = get_option('woocommerce_store_address');
+        $merchant_country           = $this->get_merchant_country();
+        $merchant_online_address    = get_site_url();
+        $rrn                        = !empty($data['processor-rrn']) ? $data['processor-rrn'] : '';
+        $authorization_code         = implode(', ', $authorization_code);
+        $transaction_type           = !empty($data['card-type']) ? $data['card-type'] : '';
+        $card_final_4_digits        = !empty($data['last-four-digits']) ? $data['last-four-digits'] : '';
+        $return_policy              = home_url('/return-policy/');
+        $refund_policy              = home_url('/refund-policy/');
+        $customer_service_contact   = $WC_Email->get_from_address();
+
+        ?>
+        <h3>Payment details</h3>
+        <ul>
+            <li><b>Merchant Name</b>: <?=$merchant_name?></li>
+            <li><b>Merchant Country</b>: <?=$merchant_country?></li>
+            <li><b>Merchant online address</b>: <a href="<?=$merchant_online_address?>"><?=$merchant_online_address?></a></li>
+            <li><b>Retrieval Reference Number</b>: <?=$rrn?></li>
+            <li><b>Authorization code</b>: <?=$authorization_code?></li>
+            <li><b>Transaction type</b>: <?=$transaction_type?></li>
+            <li><b>Card number, the final 4 digits</b>: <?=$card_final_4_digits?></li>
+            <li><b>Return policy</b>: <a href="<?=$return_policy?>" target="_blank"><?=$return_policy?></a></li>
+            <li><b>Refund policy</b>: <a href="<?=$refund_policy?>" target="_blank"><?=$refund_policy?></a></li>
+            <li><b>Customer service contact</b>: <?=$customer_service_contact?></li>
+        </ul>
+        <?php
+
+    }
+
     /**
      * Logging method
      *

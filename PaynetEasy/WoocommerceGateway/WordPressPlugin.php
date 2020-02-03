@@ -38,10 +38,11 @@ class WordPressPlugin
   `date_create` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `date_update` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `login` varchar(255) NOT NULL DEFAULT '',
-  `end_point` varchar(255) NOT NULL DEFAULT '' COMMENT 'Merchant end point',
+  `end_point` varchar(255) DEFAULT '' COMMENT 'Merchant end point',
   `end_point_group` varchar(255) DEFAULT '',
   `gateway_url` varchar(255) NOT NULL DEFAULT '',
   `html` text COMMENT 'html data from paynet',
+  `callback_data` text COMMENT 'Data of payment when payment done (callback data)',
   `errors` text,
   PRIMARY KEY (`transaction_id`),
   KEY `order_id` (`order_id`),
@@ -164,6 +165,7 @@ class WordPressPlugin
 
     public function define_public_hooks()
     {
+        //add_filter('do_parse_request', [$this, 'on_parse_request']);
         add_filter('template_include', [$this, 'on_template_include']);
     }
 
@@ -210,6 +212,21 @@ class WordPressPlugin
         $wpdb->query('DROP TABLE IF EXISTS '.self::get_table());
     }
 
+    public function on_parse_request($bool, \WP $wp)
+    {
+        if(empty($bool))
+        {
+            return false;
+        }
+
+        if(empty($_REQUEST[PAYNET_EASY_PAGE]))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * @param $template
      * @return string
@@ -238,6 +255,9 @@ class WordPressPlugin
 
             return $template;
         }
+
+        // reset any WP posts
+        unset($GLOBALS['post']);
 
         set_query_var('payneteasy_transaction', $transaction);
 

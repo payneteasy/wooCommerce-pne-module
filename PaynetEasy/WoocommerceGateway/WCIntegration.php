@@ -113,11 +113,12 @@ class WCIntegration                 implements IntegrationInterface
         
         return $errors;
     }
-    
+
     /**
-     * @param   string  $order_id
+     * @param string $order_id
      *
      * @return Transaction
+     * @throws \Exception
      */
     public function startPayment($order_id)
     {
@@ -789,6 +790,10 @@ class WCIntegration                 implements IntegrationInterface
         elseif($action === Response::NEEDED_REDIRECT)
         {
             $order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': redirect');
+        }
+        else
+        {
+            $order->update_status('on-hold', __('Payment processing', 'paynet-easy-gateway').': processing');
         }
     }
     

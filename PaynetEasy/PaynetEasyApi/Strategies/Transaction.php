@@ -46,6 +46,10 @@ class Transaction          extends PaymentTransaction
      */
     protected $state;
     /**
+     * @var bool
+     */
+    protected $isStop = false;
+    /**
      * Html for 3D redirect
      * @var string
      */
@@ -112,7 +116,18 @@ class Transaction          extends PaymentTransaction
     {
         return in_array($this->getTransactionType(), [self::REVERSAL, self::CHARGEBACK]);
     }
-    
+
+    public function stop()
+    {
+        $this->isStop               = true;
+        return $this;
+    }
+
+    public function isStop()
+    {
+        return $this->isStop;
+    }
+
     /**
      * @return string
      */

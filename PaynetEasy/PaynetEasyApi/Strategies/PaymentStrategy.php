@@ -303,6 +303,11 @@ class PaymentStrategy
             }
 
             $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
+            
+            if($this->response !== null) {
+                // mark transaction is done
+                $this->transaction->stop();
+            }
         }
         elseif ($this->transaction->isProcessing())
         {

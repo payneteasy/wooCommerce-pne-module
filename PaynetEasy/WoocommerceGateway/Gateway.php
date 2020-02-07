@@ -194,7 +194,7 @@ class Gateway                       extends     \WC_Payment_Gateway
         $transaction_id             = $transaction->getTransactionId();
         
         // If processing
-        if($transaction->isProcessing())
+        if($transaction->isProcessing() && $transaction->isStop() === false)
         {
             // or redirect or order page
             $redirect               = $transaction->getRedirectUrl() ?? $this->wc_integration->getProcessPageUrl($transaction_id);

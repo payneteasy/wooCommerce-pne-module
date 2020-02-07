@@ -30,7 +30,8 @@ abstract class AbstractCallback implements CallbackInterface
         PaymentTransaction::STATUS_APPROVED,
         PaymentTransaction::STATUS_DECLINED,
         PaymentTransaction::STATUS_FILTERED,
-        PaymentTransaction::STATUS_ERROR
+        PaymentTransaction::STATUS_ERROR,
+        PaymentTransaction::STATUS_PROCESSING
     );
 
     /**

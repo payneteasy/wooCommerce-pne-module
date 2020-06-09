@@ -156,7 +156,7 @@ class WordPressPlugin
     {
         register_activation_hook($this->plugin_file_name, [$this, 'on_activate']);
         register_deactivation_hook($this->plugin_file_name, [$this, 'on_deactivate']);
-        register_uninstall_hook($this->plugin_file_name, [$this, 'on_uninstall']);
+        register_uninstall_hook($this->plugin_file_name, self::class.'::on_uninstall');
 
         $this->wp_add_action('plugins_loaded', [$this, 'on_plugins_loaded']);
 
@@ -200,7 +200,7 @@ class WordPressPlugin
 
     }
 
-    public function on_uninstall()
+    static public function on_uninstall()
     {
         if (!current_user_can('activate_plugins'))
         {

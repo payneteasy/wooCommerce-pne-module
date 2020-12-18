@@ -10,7 +10,7 @@ Installation process:
 8. On this page activate and customize PaynetEasy Gateway plugin:
 http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy
 according to the interface data (all settings are described and understandable)
-9. Make a test payment
+9. Make a test payment.
 
 Процесс установки:
 

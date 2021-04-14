@@ -25,3 +25,7 @@ according to the interface data (all settings are described and understandable)
 http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy
 согласно данных интерфейса (все настройки описаны и понятны)
 9. Делаем тестовый платёж
+
+An example of configured settings/Пример настроенной конфигурации
+
+![woocommerce-settings](images/woo1.png)

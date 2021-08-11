@@ -18,13 +18,11 @@ according to the interface data (all settings are described and understandable)
 2. Установить woocommerce
 3. В папке <Ваш корень сайта WP>/wp-content/plugins/ создать директорию "paynet-easy-gateway"
 4. В папку <Ваш корень сайта WP>/wp-content/plugins/paynet-easy-gateway/ скопировать код репозитория
-5. Зайди в админку wp: http://woocommerce/wp-admin/plugins.php - плагины
+5. Зайти в административную панель WordPress, меню плагинов: http://woocommerce/wp-admin/plugins.php
 6. Найти там плагин с именем PaynetEasy Gateway, активировать его (если проблем нет, он активируется)
-7. Заходим на страницу: Woocommerce/Настройки, вкладка Платежи: http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout
-8. Находим там наш плагин PaynetEasy Gateway, включаем его и настраиваем:
-http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy
-согласно данных интерфейса (все настройки описаны и понятны)
-9. Делаем тестовый платёж
+7. Зайти на страницу: Woocommerce/Настройки, вкладка Платежи: http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout
+8. Найти там плагин PaynetEasy Gateway, включить его и настроить согласно данных интерфейса: http://woocommerce/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy
+9. Сделать тестовый платёж
 
 An example of configured settings/Пример настроенной конфигурации
 

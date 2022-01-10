@@ -27,4 +27,3 @@ according to the interface data (all settings are described and understandable)
 An example of configured settings/Пример настроенной конфигурации
 
 ![woocommerce-settings](images/woo1.png)
-t

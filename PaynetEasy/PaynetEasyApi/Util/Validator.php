@@ -96,7 +96,12 @@ class Validator
      * Validate value as long string
      */
     const LONG_STRING   = 'long_string';
-
+    
+    /**
+     * Validate value as dpn string
+     */
+    const DPN_STRING    = 'dpn_string';
+    
     /**
      *
      */
@@ -121,6 +126,7 @@ class Validator
         self::ID                    => '#^[\S\s]{1,20}$#i',
         self::MEDIUM_STRING         => '#^[\S\s]{1,50}$#i',
         self::LONG_STRING           => '#^[\S\s]{1,128}$#i',
+        self::DPN_STRING            => '#^[\S\s]{1,65000}$#i',
         self::BIG_STRING            => '#^[\S\s]+$#i'
     );
 

@@ -24,7 +24,7 @@ class TransferByRefQuery extends PaymentQuery
         array('destination-card-ref-id',    'payment.recurrentCardTo.paynetId',             true,    Validator::ID),
         array('login',                      'queryConfig.login',                            true,    Validator::MEDIUM_STRING),
         // optional
-        array('order_desc',                 'payment.description',                          false,   Validator::LONG_STRING),
+        array('order_desc',                 'payment.description',                          false,   Validator::DPN_STRING),
         array('source-card-ref-id',         'payment.recurrentCardFrom.paynetId',           false,   Validator::ID),
         array('cvv2',                       'payment.recurrentCardFrom.cvv2',               false,   Validator::CVV2),
         array('redirect_url',               'queryConfig.redirectUrl',                      false,   Validator::URL),

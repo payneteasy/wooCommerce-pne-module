@@ -18,7 +18,7 @@ class SyncAccountVerificationQuery extends Query {
     (
         // mandatory
         array('client_orderid',         'payment.clientId',                     true,   Validator::ID),
-        array('order_desc',             'payment.description',                  true,   Validator::LONG_STRING),
+        array('order_desc',             'payment.description',                  true,   Validator::DPN_STRING),
         array('address1',               'payment.billingAddress.firstLine',     true,   Validator::MEDIUM_STRING),
         array('city',                   'payment.billingAddress.city',          true,   Validator::MEDIUM_STRING),
         array('zip_code',               'payment.billingAddress.zipCode',       true,   Validator::ZIP_CODE),

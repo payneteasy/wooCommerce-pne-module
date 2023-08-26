@@ -1,12 +1,12 @@
 # Содержание
 
-## [Установка среды для плагина WooCommerce Payneteasy Gateway.](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D1%81%D1%80%D0%B5%D0%B4%D1%8B-%D0%B4%D0%BB%D1%8F-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-woocommerce-payneteasy-gateway)
-## [Установка WordPress](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-wordpress) 
-## [Установка плагина WooCommerce](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-woocommerce)
-## [Установка и настройка плагина Payneteasy Gateway](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-payneteasy-gateway)
-## [Процесс создания товара](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#процесс-создания-товара)
-## [Процесс оплаты](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%81%D0%BF%D0%B8%D1%81%D0%BE%D0%BA-%D0%BE%D1%88%D0%B8%D0%B1%D0%BE%D0%BA)
-## [Список ошибок](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%81%D0%BF%D0%B8%D1%81%D0%BE%D0%BA-%D0%BE%D1%88%D0%B8%D0%B1%D0%BE%D0%BA)
+## [Установка среды для плагина WooCommerce Payneteasy Gateway.](#установка-среды-для-плагина-woocommerce-payneteasy-gateway)
+## [Установка WordPress](#установка-wordpress) 
+## [Установка плагина WooCommerce](#установка-плагина-woocommerce)
+## [Установка и настройка плагина Payneteasy Gateway](#установка-и-настройка-плагина-payneteasy-gateway)
+## [Процесс создания товара](#процесс-создания-товара)
+## [Процесс оплаты](#процесс-оплаты)
+## [Список ошибок](#список-ошибок)
 
 # Установка среды для плагина WooCommerce Payneteasy Gateway 
 - ***Протестировано на WooCommerce версии 8.0.1***

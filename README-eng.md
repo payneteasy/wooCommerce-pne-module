@@ -1,12 +1,12 @@
 # Content
 
-## [WooCommerce Payneteasy Gateway environment installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#woocommerce-payneteasy-gateway-environment-installation)
-## [WordPress Installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#wordpress-installation)
-## [WooCommerce plugin installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#woocommerce-plugin-installation)
-## [Payneteasy Gateway plugin installation and configuration](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#payneteasy-gateway-plugin-installation-and-configuration)
-## [Product creating process](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#product-creating-process)
-## [Payment Flow](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#payment-flow)
-## [List of errors](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#list-of-errors)
+## [WooCommerce Payneteasy Gateway environment installation](#woocommerce-payneteasy-gateway-environment-installation)
+## [WordPress Installation](#wordpress-installation)
+## [WooCommerce plugin installation](#woocommerce-plugin-installation)
+## [Payneteasy Gateway plugin installation and configuration](#payneteasy-gateway-plugin-installation-and-configuration)
+## [Product creating process](#product-creating-process)
+## [Payment Flow](#payment-flow)
+## [List of errors](#list-of-errors)
 
 # WooCommerce Payneteasy Gateway environment installation
 - ***Tested on WooCommerce v 8.0.1***

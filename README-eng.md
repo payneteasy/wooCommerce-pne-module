@@ -1,12 +1,12 @@
 # Content
 
-## [WooCommerce Payneteasy Gateway environment installation](#woocommerce-payneteasy-gateway-environment-installation)
-## [WordPress Installation](#wordpress-installation)
-## [WooCommerce plugin installation](#woocommerce-plugin-installation)
-## [Payneteasy Gateway plugin installation and configuration](#payneteasy-gateway-plugin-installation-and-configuration)
-## [Product creating process](#product-creating-process)
-## [Payment Flow](#payment-flow)
-## [List of errors](#list-of-errors)
+## [WooCommerce Payneteasy Gateway environment installation](#woocommerce-payneteasy-gateway-environment-installation-1)
+## [WordPress Installation](#wordpress-installation-1)
+## [WooCommerce plugin installation](#woocommerce-plugin-installation-1)
+## [Payneteasy Gateway plugin installation and configuration](#payneteasy-gateway-plugin-installation-and-configuration-1)
+## [Product creating process](#product-creating-process-1)
+## [Payment Flow](#payment-flow-1)
+## [List of errors](#list-of-errors-1)
 
 # WooCommerce Payneteasy Gateway environment installation
 - ***Tested on WooCommerce v 8.0.1***

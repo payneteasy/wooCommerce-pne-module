@@ -1,7 +1,7 @@
 # WooCommerce Payneteasy Gateway environment installation
 - ***Tested on WooCommerce v 8.0.1***
 
-1. Install WorPress.
+1. Install WordPress.
 2. Install WooCommerce from Plugin Market.
 3. In the folder **/wp-content/plugins/** create directory **paynet-easy-gateway**.
 
@@ -161,10 +161,12 @@ Product parameters that should be filled:
 
 
 5. Start the redirecting process.
-6. The payer is redirecting to the wait form.
 
-   
+
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/20-eng.jpg" alt="drawing" width="550"/>
+
+
+6. The payer is redirecting to the wait form.
 
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/23.jpg" alt="drawing" width="550"/>
@@ -178,32 +180,50 @@ Product parameters that should be filled:
 
 # List of errors
 
-1. **Error** `Callback URL cannot be local or private`
+1. **Error:** `Callback URL cannot be local or private`
 
 **Solution**
 
-In the **/var/www/html/wp-content/plugins/paynet-easy-gateway/PaynetEasy/WoocommerceGateway/WCIntegration.php** file remove the local ip `home_url('/')` to `https://httpstat.us/200`.
+In the **/var/www/html/wp-content/plugins/paynet-easy-gateway/PaynetEasy/WoocommerceGateway/WCIntegration.php** file replace the local IP `home_url('/')` with external URL or IP, for example, `https://httpstat.us/200`.
 
-2. **Error** `Project with X currency doest not apply request with currency Y`
-
-**Solution**
-
-Incorrect currency. WooCommerce currency should match to the Payment Gateway's terminal currency. It can be changed in the [WooCommerce general currency settings](http://wordpress.org/wp-admin/admin.php?page=wc-settings)
-
-3. **Error** `Amount is less/higher than minimum/maximum X`
+2. **Error:** `Project with X currency doest not apply request with currency Y`
 
 **Solution**
 
-Terminal limits must be checked.
+Incorrect currency. WooCommerce currency should match to the Payment Gateway's endpoint currency. It can be changed in the [WooCommerce general currency settings](http://wordpress.org/wp-admin/admin.php?page=wc-settings)
 
-4. **Error** `Internal server error`
+3. **Error:** `Amount is less/higher than minimum/maximum X`
+
+**Solution**
+
+Endpoint limits must be checked.
+
+4. **Error:** `Internal server error`
 
 **Solution**
 
 WooCommerce system files must be checked. Most likely, the problem in the .php files - incorrect manual configurations, damaged files etc. Good solution is updating or reinstalling the repository.
 
-5. **Error** `Error occured. HTTP code: '50'` 
+5. **Error:** `Error occured. HTTP code: '50x'` 
 
 **Solution**
 
 Gateway URL parameter in *Payneteasy Gateway* plugin configurations must be corrected. Example: *https://sandbox.payneteasy.eu/paynet/api/v2*.
+
+6. **Error:** `Property 'signingKey' does not defined in PaymentTransaction property 'queryConfig'`
+
+**Solution**
+
+Incorrect merchant Control Key. [Payneteasy Gateway settings](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) must me checked.
+
+7. **Error:** `Some Request fields are invalid: Gateway url does not valid in Request`
+
+**Solution**
+
+Incorrect Gateway url. [Payneteasy Gateway settings](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) must me checked.
+
+8. **Error:** `End point with id 0 not found`
+
+**Solution**
+
+Incorrect Endpoint or Login field is empty/incorrect. [Payneteasy Gateway settings](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) must me checked.

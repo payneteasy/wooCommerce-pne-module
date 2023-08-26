@@ -164,13 +164,15 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 
 
 5. Начало процесса перенаправления.
+
+
+   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/19-rus.jpg" alt="drawing" width="550"/>
+
+
 6. Плательщик перенаправляется на форму ожидания.
    
 
-  <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/19-rus.jpg" alt="drawing" width="550"/>
-
-
-  <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/20-rus.jpg" alt="drawing" width="550"/> 
+   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/20-rus.jpg" alt="drawing" width="550"/> 
 
  
 8. Плательщик перенаправляется на финальную форму оплаты.
@@ -184,13 +186,13 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 
 **Решение**
 
-В файле **/var/www/html/wp-content/plugins/paynet-easy-gateway/PaynetEasy/WoocommerceGateway/WCIntegration.php** убрать локальный IP `home_url('/')` и заполнить `https://httpstat.us/200`.
+В файле **/var/www/html/wp-content/plugins/paynet-easy-gateway/PaynetEasy/WoocommerceGateway/WCIntegration.php** убрать локальный IP `home_url('/')` и заполнить внешним URL или IP, например, `https://httpstat.us/200`.
 
 2. **Ошибка:** `Project with X currency doest not apply request with currency Y`
 
 **Решение**
 
-Неверная валюта. Она WooCommerce должна совпадать вютой терминала Платежного Шлюза. Валюта может быть изменена в разделе [основных настроек плагина WooCommerce](http://wordpress.org/wp-admin/admin.php?page=wc-settings)
+Неверная валюта. Валюта оплаты в WooCommerce должна совпадать с валютой терминала. Валюта может быть изменена в разделе [основных настроек плагина WooCommerce](http://wordpress.org/wp-admin/admin.php?page=wc-settings)
 
 3. **Ошибка:** `Amount is less/higher than minimum/maximum X`
 
@@ -202,10 +204,28 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 
 **Решение**
 
-Должны быть проверены системные файлы WooCommerce. Данну ошибку может выдавать неверная настройка .php файлов, их неправильная установка и т.д. Лучшее решение - обновление или переустановка репозитория.
+Должны быть проверены системные файлы WooCommerce. Данную ошибку может выдавать неверная настройка .php файлов, их неправильная установка и т.д. Лучшее решение - обновление или переустановка репозитория.
 
-5. **Ошибка:** `Error occured. HTTP code: '50'` 
+5. **Ошибка:** `Error occured. HTTP code: '50x'` 
 
 **Решение**
 
 URL Шлюза в настройках плагина *Payneteasy Шлюз*  должен быть изменен на корректный. Пример: *https://sandbox.payneteasy.eu/paynet/api/v2*.
+
+6. **Ошибка:** `Property 'signingKey' does not defined in PaymentTransaction property 'queryConfig'`
+
+**Решение**
+
+Неверный Секретный Ключ продавца. [настроек плагина Payneteasy Шлюз](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).
+
+7. **Ошибка:** `Some Request fields are invalid: Gateway url does not valid in Request`
+
+**Решение**
+
+Неверный url шлюза. Должна быть проверена корректность [настроек плагина Payneteasy Шлюз](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).
+
+8. **Ошибка:** `End point with id 0 not found`
+
+**Решение**
+
+Неверный Endpoint или пустое поле Логин/заполнено неверно. Должна быть проверена корректность [настроек плагина Payneteasy Шлюз](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).

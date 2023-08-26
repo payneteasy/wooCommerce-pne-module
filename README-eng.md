@@ -1,6 +1,5 @@
 # Content
 
-## [WooCommerce Payneteasy Gateway environment installation](#woocommerce-payneteasy-gateway-environment-installation-1)
 ## [WordPress Installation](#wordpress-installation-1)
 ## [WooCommerce plugin installation](#woocommerce-plugin-installation-1)
 ## [Payneteasy Gateway plugin installation and configuration](#payneteasy-gateway-plugin-installation-and-configuration-1)
@@ -8,38 +7,7 @@
 ## [Payment Flow](#payment-flow-1)
 ## [List of errors](#list-of-errors-1)
 
-# WooCommerce Payneteasy Gateway environment installation
 - ***Tested on WooCommerce v 8.0.1***
-
-1. Install WordPress.
-2. Install WooCommerce from Plugin Market.
-3. In the folder **/wp-content/plugins/** create directory **paynet-easy-gateway**.
-
-```bash
-cd /wp-content/plugins/
-mkdir paynet-easy-gateway
-```
-
-4. Recursively copy the **wooCommerce-pne-module** directory content (not the directory itself) to the directory **/wp-content/plugins/paynet-easy-gateway**.
-
-```bash
-cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
-```
-
-Content of the directory *wooCommerce-pne-module*
-
-* admin
-* docs
-* images
-* index.php
-* languages
-* LICENSE.txt
-* PaynetEasy
-* paynet-easy-gateway.php
-* public
-* README.md
-* templates
-* uninstall.php
 
 # WordPress Installation
 
@@ -86,15 +54,44 @@ Content of the directory *wooCommerce-pne-module*
 
 # Payneteasy Gateway plugin installation and configuration
 
-1. Go to the **Plugins** tab and activate *Payneteasy Gateway* plugin by clicking `Activate` button.
+1. In the **/wp-content/plugins/** folder create directory **paynet-easy-gateway**.
+
+```bash
+cd /wp-content/plugins/
+mkdir paynet-easy-gateway
+```
+
+2. Recursively copy the **wooCommerce-pne-module** directory content (not the directory itself) to the directory **/wp-content/plugins/paynet-easy-gateway**.
+
+```bash
+cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
+```
+
+Content of the directory *wooCommerce-pne-module*
+
+* admin
+* docs
+* images
+* index.php
+* languages
+* LICENSE.txt
+* PaynetEasy
+* paynet-easy-gateway.php
+* public
+* README.md
+* templates
+* uninstall.php
+
+
+3. Go to the **Plugins** tab and activate *Payneteasy Gateway* plugin by clicking `Activate` button.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/11-eng.jpg" alt="drawing" width="500"/>
    
-2. Go to the *WooCommerce* plugin `1` payment customization page [**Woocommerce/Settings/Payments**](http://wordpress.org/wp-admin.php?page=wc-settings&tab=checkout) `2`, `3`. Enable *Payneteasy Method* `4` and drag it to the top `5`. Save changes.
+4. Go to the *WooCommerce* plugin `1` payment customization page [**Woocommerce/Settings/Payments**](http://wordpress.org/wp-admin.php?page=wc-settings&tab=checkout) `2`, `3`. Enable *Payneteasy Method* `4` and drag it to the top `5`. Save changes.
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/12-eng.jpg" alt="drawing" width="1000"/>
    
-3. Go to the [*Payneteasy Gateway* plugin customization page](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) by clicking on it.
+5. Go to the [*Payneteasy Gateway* plugin customization page](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) by clicking on it.
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/13-eng.jpg" alt="drawing" width="450"/>
 

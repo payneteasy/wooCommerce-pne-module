@@ -1,6 +1,5 @@
 # Содержание
 
-## [Установка среды для плагина WooCommerce Payneteasy Gateway.](#установка-среды-для-плагина-woocommerce-payneteasy-gateway-1)
 ## [Установка WordPress](#установка-wordpress-1) 
 ## [Установка плагина WooCommerce](#установка-плагина-woocommerce-1)
 ## [Установка и настройка плагина Payneteasy Gateway](#установка-и-настройка-плагина-payneteasy-gateway-1)
@@ -8,38 +7,7 @@
 ## [Процесс оплаты](#процесс-оплаты-1)
 ## [Список ошибок](#список-ошибок-1)
 
-# Установка среды для плагина WooCommerce Payneteasy Gateway 
 - ***Протестировано на WooCommerce версии 8.0.1***
-
-1. Установить WordPress.
-2. Установить WooCommerce.
-3. После установки WooCommerce в директории **/wp-content/plugins/** необходимо создать новую директорию **paynet-easy-gateway**.
-
-```bash
-cd /wp-content/plugins/
-mkdir paynet-easy-gateway
-```
-
-4. Рекурсивно скопировать содержимое директории **wooCommerce-pne-module** (не копировать саму папку) в созданную директорию **/wp-content/plugins/paynet-easy-gateway**.
-
-```bash
-cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
-```
-
-Содержимое директории *wooCommerce-pne-module*
-
-* admin
-* docs
-* images
-* index.php
-* languages
-* LICENSE.txt
-* PaynetEasy
-* paynet-easy-gateway.php
-* public
-* README.md
-* templates
-* uninstall.php
 
 # Установка WordPress
 
@@ -87,16 +55,44 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 
 # Установка и настройка плагина Payneteasy Gateway
 
-1. Перейти в раздел **Плагины** и активировать плагин *Payneteasy Шлюз*.
+1. После установки WooCommerce в директории **/wp-content/plugins/** необходимо создать новую директорию **paynet-easy-gateway**.
+
+```bash
+cd /wp-content/plugins/
+mkdir paynet-easy-gateway
+```
+
+2. Рекурсивно скопировать содержимое директории **wooCommerce-pne-module** (не копировать саму папку) в созданную директорию **/wp-content/plugins/paynet-easy-gateway**.
+
+```bash
+cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
+```
+
+Содержимое директории *wooCommerce-pne-module*
+
+* admin
+* docs
+* images
+* index.php
+* languages
+* LICENSE.txt
+* PaynetEasy
+* paynet-easy-gateway.php
+* public
+* README.md
+* templates
+* uninstall.php
+
+
+3. Перейти в раздел **Плагины** и активировать плагин *Payneteasy Шлюз*.
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/10-rus.jpg" alt="drawing" width="500"/>
    
-2. Перейти на страницу настройки плагина [**Woocommerce/Настройки/Платежи**](http://wordpress.org/wp-admin.php?page=wc-settings&tab=checkout).
-3. Включить метод *Payneteasy Шлюз* и передвинуть его вверх. Сохранить изменения.
+4. Перейти на страницу настройки плагина [**Woocommerce/Настройки/Платежи**](http://wordpress.org/wp-admin.php?page=wc-settings&tab=checkout), включить метод *Payneteasy Шлюз* и передвинуть его вверх. Сохранить изменения.
 
   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/11-rus.jpg" alt="drawing" width="1000"/>
    
-4. Перейти на [страницу настройки плагина *Payneteasy Gateway*](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).
+5. Перейти на [страницу настройки плагина *Payneteasy Gateway*](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).
 
   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/12-rus.jpg" alt="drawing" width="1000"/>
 

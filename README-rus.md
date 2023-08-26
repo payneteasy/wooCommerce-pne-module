@@ -1,3 +1,13 @@
+# Содержание
+
+## [Установка среды для плагина WooCommerce Payneteasy Gateway.](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D1%81%D1%80%D0%B5%D0%B4%D1%8B-%D0%B4%D0%BB%D1%8F-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-woocommerce-payneteasy-gateway)
+## [Установка WordPress](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-wordpress) 
+## [Установка плагина WooCommerce](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-woocommerce)
+## [Установка и настройка плагина Payneteasy Gateway](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D0%B0-payneteasy-gateway)
+## [Процесс создания товара](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#процесс-создания-товара)
+## [Процесс оплаты](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%81%D0%BF%D0%B8%D1%81%D0%BE%D0%BA-%D0%BE%D1%88%D0%B8%D0%B1%D0%BE%D0%BA)
+## [Список ошибок](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-rus.md#%D1%81%D0%BF%D0%B8%D1%81%D0%BE%D0%BA-%D0%BE%D1%88%D0%B8%D0%B1%D0%BE%D0%BA)
+
 # Установка среды для плагина WooCommerce Payneteasy Gateway 
 - ***Протестировано на WooCommerce версии 8.0.1***
 
@@ -37,28 +47,25 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 2. Выбрать язык.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/1-rus.jpg" alt="drawing" width="200"/>
-   
-3. Продолжить установку WordPress.
+    
 
-## Процесс установки WordPress 
-
-1. Начало процесса установки WordPress.
+3. Начало процесса установки WordPress.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/2-rus.jpg" alt="drawing" width="450"/>
 
-2. Ввести название базы данных, имя пользователя и пароль.
+4. Ввести название базы данных, имя пользователя и пароль.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/3-rus.jpg" alt="drawing" width="450"/>
 
-3. Начать установку.
+5. Начать установку.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/4-rus.jpg" alt="drawing" width="450"/>
 
-4. Выбрать название сайта, имя пользователя и задать пароль.
+6. Выбрать название сайта, имя пользователя и задать пароль.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/5-rus.jpg" alt="drawing" width="450"/>
 
-5. Конец процесса установки.
+7. Конец процесса установки.
     
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/6-rus.jpg" alt="drawing" width="450"/>
 
@@ -74,9 +81,7 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 
 <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/8-rus.jpg" alt="drawing" width="350"/>
 
-## Продолжение настройки
-
-Выбрать название магазина, тип товара и местоположение.
+5. Выбрать название магазина, тип товара и местоположение.
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/9-rus.jpg" alt="drawing" width="450"/>
 
@@ -102,16 +107,16 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
 | Описание         | Этот текст будет выводиться на странице оплаты                                                                                                              |
 | Тестовый режим   | Тестовый режим работы шлюза                                                                                                                                 |
 | Режим журналов   | Может быть выбран один из следующих режимов `EMERGENCY`, `ALERT`, `CRITICAL`, `ERROR`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`                                 |
-| Метод интеграции | Прием платежных реквизитов реализован на стороне PaynetEasy Шлюза. Должен быть выбран один из методов интеграции: `Встроенная форма`, `Удаленная форма`.    |
-| End point        | Терминал — это точка входа для транзакций, соединяющей стороны для единой валютной интеграции. Должен использоваться либо терминал, либо группа терминалов. |
-| End point group  | Группа терминалов — это точка входа для транзакций продавца для мультивалютной интеграции. Должен использоваться либо терминал, либо группа терминалов.     |
+| Метод интеграции | Прием платежных реквизитов реализован на стороне PaynetEasy Шлюза. Должен быть выбран один из методов интеграции: `Встроенная форма`, `Удаленная форма`     |
+| End point        | Терминал — это точка входа для транзакций, соединяющей стороны для единой валютной интеграции. Должен использоваться либо терминал, либо группа терминалов  |
+| End point group  | Группа терминалов — это точка входа для транзакций продавца для мультивалютной интеграции. Должен использоваться либо терминал, либо группа терминалов      |
 | Логин            | Логин продавца                                                                                                                                              |
 | Секретный ключ   | Контрольный ключ продавца                                                                                                                                   |
 | URL шлюза        | URL для шлюза                                                                                                                                               |
 
 **Заметка** Для тестового режима должны использоваться только тестовые параметры.
 
-# Как создать товар?
+# Процесс создания товара
 
 1. Перейти в раздел **Товары** и нажать на кнопку `Добавить`.
 

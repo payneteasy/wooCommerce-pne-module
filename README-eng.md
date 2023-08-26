@@ -1,3 +1,13 @@
+# Content
+
+## [WooCommerce Payneteasy Gateway environment installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#woocommerce-payneteasy-gateway-environment-installation)
+## [WordPress Installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#wordpress-installation)
+## [WooCommerce plugin installation](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#woocommerce-plugin-installation)
+## [Payneteasy Gateway plugin installation and configuration](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#payneteasy-gateway-plugin-installation-and-configuration)
+## [Product creating process](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#product-creating-process)
+## [Payment Flow](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#payment-flow)
+## [List of errors](https://github.com/payneteasy/wooCommerce-pne-module/blob/master/README-eng.md#list-of-errors)
+
 # WooCommerce Payneteasy Gateway environment installation
 - ***Tested on WooCommerce v 8.0.1***
 
@@ -38,30 +48,27 @@ Content of the directory *wooCommerce-pne-module*
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/1-eng.jpg" alt="drawing" width="200"/>
    
-3. Continue the installation with following content.
-
-## WordPress installation process
-1. Start WordPress installation.
+3. Start WordPress installation.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/2-eng.jpg" alt="drawing" width="450"/>
 
-2. Provide the name of the database and user created earlier.
+4. Provide the name of the database and user created earlier.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/3-eng.jpg" alt="drawing" width="450"/>
 
-3. Run the installation.
+5. Run the installation.
    
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/4-eng.jpg" alt="drawing" width="450"/>
 
-4. Set the site name, username and password.
-   
+6. Set the site name, username and password.
+  
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/5-eng.jpg" alt="drawing" width="450"/>
 
-5. Finish the installation process.
+7. Finish the installation process.
     
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/6-eng.jpg" alt="drawing" width="450"/>
    
-# WooCommerce plugin installation process
+# WooCommerce plugin installation
 
 1. Go to the [**Plugins**](http://wordpress.org/wp-admin/plugins.php) tab and click the `Add New` button.
 2. Find the *wooCommerce* plugin in the search field.
@@ -73,9 +80,7 @@ Content of the directory *wooCommerce-pne-module*
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/8-eng.jpg" alt="drawing" width="350"/>
    
-## Continue the configuration process
-
-Select the Industry field, type of products and region and click `Continue` button.
+5. Select the Industry field, type of products and region and click `Continue` button.
 
    <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/10-eng.jpg" alt="drawing" width="450"/>
 
@@ -109,7 +114,7 @@ Select the Industry field, type of products and region and click `Continue` butt
 
 **Note** For sandbox mode all sandbox parameters must be used.
 
-# How to create a product?
+# Product creating process
 
 Go to the **Products** tab on the Sidebar and create a new product.
 

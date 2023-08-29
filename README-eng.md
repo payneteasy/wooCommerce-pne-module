@@ -93,7 +93,7 @@ Content of the directory *wooCommerce-pne-module*
    
 5. Go to the [*Payneteasy Gateway* plugin customization page](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy) by clicking on it.
 
-   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/13-eng.jpg" alt="drawing" width="450"/>
+   <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-eng/13-eng.jpg" alt="drawing" width="500"/>
 
 | Parameter         | Description                                                                                                                                                        | 
 |-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|

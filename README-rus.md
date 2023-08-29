@@ -94,7 +94,7 @@ cp -r wooCommerce-pne-module/* /wp-content/plugins/paynet-easy-gateway
    
 5. Перейти на [страницу настройки плагина *Payneteasy Gateway*](http://wordpress.org/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payneteasy).
 
-  <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/12-rus.jpg" alt="drawing" width="1000"/>
+  <img src="https://github.com/payneteasy/wooCommerce-pne-module/blob/master/images-rus/12-rus.jpg" alt="drawing" width="500"/>
 
 | Параметр         | Описание                                                                                                                                                    | 
 |------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|

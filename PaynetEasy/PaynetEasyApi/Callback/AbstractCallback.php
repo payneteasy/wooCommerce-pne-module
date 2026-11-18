@@ -220,10 +220,9 @@ abstract class AbstractCallback implements CallbackInterface
             $paymentTransaction->getQueryConfig()->getSigningKey()
         );
 
-        if($expectedControlCode !== $callbackResponse->getControlCode())
+        if(!hash_equals($expectedControlCode, (string) $callbackResponse->getControlCode()))
         {
-            throw new ValidationException("Actual control code '{$callbackResponse->getControlCode()}' does " .
-                                          "not equal expected '{$expectedControlCode}'");
+            throw new ValidationException('Invalid callback control code');
         }
     }
 }

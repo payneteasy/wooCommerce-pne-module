@@ -248,8 +248,21 @@ class Gateway                       extends     \WC_Payment_Gateway
 
     public function process_refund($order_id, $amount = null, $reason = '')
     {
-        $transaction                = $this->wc_integration->startRefund($order_id, $amount, $reason);
-        
+        try
+        {
+            $transaction            = $this->wc_integration->startRefund($order_id, $amount, $reason);
+        }
+        catch (\Exception $exception)
+        {
+            return new \WP_Error('payneteasy_refund', $exception->getMessage());
+        }
+
+        // Report a refund only when the gateway accepted it.
+        if($transaction === null || $transaction->isDeclined() || $transaction->isError())
+        {
+            return new \WP_Error('payneteasy_refund', __('Refund declined by the payment gateway', 'paynet-easy-gateway'));
+        }
+
         return true;
     }
 
@@ -348,16 +361,16 @@ class Gateway                       extends     \WC_Payment_Gateway
         ?>
         <h3>Payment details</h3>
         <ul>
-            <li><b>Merchant Name</b>: <?=$merchant_name?></li>
-            <li><b>Merchant Country</b>: <?=$merchant_country?></li>
-            <li><b>Merchant online address</b>: <a href="<?=$merchant_online_address?>"><?=$merchant_online_address?></a></li>
-            <li><b>Retrieval Reference Number</b>: <?=$rrn?></li>
-            <li><b>Authorization code</b>: <?=$authorization_code?></li>
-            <li><b>Transaction type</b>: <?=$transaction_type?></li>
-            <li><b>Card number, the final 4 digits</b>: <?=$card_final_4_digits?></li>
-            <li><b>Return policy</b>: <a href="<?=$return_policy?>" target="_blank"><?=$return_policy?></a></li>
-            <li><b>Refund policy</b>: <a href="<?=$refund_policy?>" target="_blank"><?=$refund_policy?></a></li>
-            <li><b>Customer service contact</b>: <?=$customer_service_contact?></li>
+            <li><b>Merchant Name</b>: <?=esc_html($merchant_name)?></li>
+            <li><b>Merchant Country</b>: <?=esc_html($merchant_country)?></li>
+            <li><b>Merchant online address</b>: <a href="<?=esc_url($merchant_online_address)?>"><?=esc_html($merchant_online_address)?></a></li>
+            <li><b>Retrieval Reference Number</b>: <?=esc_html($rrn)?></li>
+            <li><b>Authorization code</b>: <?=esc_html($authorization_code)?></li>
+            <li><b>Transaction type</b>: <?=esc_html($transaction_type)?></li>
+            <li><b>Card number, the final 4 digits</b>: <?=esc_html($card_final_4_digits)?></li>
+            <li><b>Return policy</b>: <a href="<?=esc_url($return_policy)?>" target="_blank"><?=esc_html($return_policy)?></a></li>
+            <li><b>Refund policy</b>: <a href="<?=esc_url($refund_policy)?>" target="_blank"><?=esc_html($refund_policy)?></a></li>
+            <li><b>Customer service contact</b>: <?=esc_html($customer_service_contact)?></li>
         </ul>
         <?php
 

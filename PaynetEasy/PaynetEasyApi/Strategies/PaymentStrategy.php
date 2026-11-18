@@ -58,7 +58,7 @@ class PaymentStrategy
      */
     protected $integration;
     
-    public function __construct(IntegrationInterface $integration = null)
+    public function __construct(?IntegrationInterface $integration = null)
     {
         if($integration !== null)
         {

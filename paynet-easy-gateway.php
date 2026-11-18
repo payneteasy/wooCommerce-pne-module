@@ -40,7 +40,7 @@ define('PAYNET_EASY_PAGE', 'payneteasy-page');
  */
 spl_autoload_register(function ($class) {
 
-    if(strpos($class,PAYNET_EASY_BASE) !== 0)
+    if(strpos($class,PAYNET_EASY_BASE) !== 0 || !preg_match('/^[A-Za-z0-9_\\\\]+$/', $class))
     {
         return;
     }

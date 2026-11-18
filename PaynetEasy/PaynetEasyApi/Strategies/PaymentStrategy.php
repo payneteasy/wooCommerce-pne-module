@@ -295,10 +295,10 @@ class PaymentStrategy
 
             // When the transaction has been processed, but redirect happened
             // Check that case
+            // The redirect data is not verified here: keep the stored result.
             if(!$this->transaction->isProcessing())
             {
-                $this->response = $this->callback;
-                $this->transaction->setResponse($this->response);
+                $this->response = $this->transaction->getResponse();
                 return;
             }
 
@@ -419,6 +419,13 @@ class PaymentStrategy
     protected function handleException(\Exception $exception)
     {
         $this->integration->error('Exception: '.$exception->getMessage()."\n".$exception->getTraceAsString());
+
+        // A failed callback or redirect (bad data, unknown transaction, gateway
+        // error) says nothing about the payment: leave the transaction and order as they are.
+        if(in_array($this->action, [self::ACTION_CALLBACK, self::ACTION_REDIRECT], true))
+        {
+            return;
+        }
         
         if($this->transaction !== null)
         {

@@ -157,7 +157,7 @@ abstract class AbstractCallback implements CallbackInterface
                 $propertyValue = PropertyAccessor::getValue($paymentTransaction, $propertyPath, false);
                 $callbackValue = $callbackResponse[$fieldName];
 
-                if ($propertyValue != $callbackValue)
+                if (!static::isEqualValue($propertyPath, $propertyValue, $callbackValue))
                 {
                     $unequalValues[] = "CallbackResponse field '{$fieldName}' value '{$callbackValue}' does not " .
                                        "equal PaymentTransaction property '{$propertyPath}' value '{$propertyValue}'";
@@ -198,6 +198,30 @@ abstract class AbstractCallback implements CallbackInterface
         {
             $paymentTransaction->addError($callbackResponse->getError());
         }
+    }
+
+    /**
+     * Compares a callback field with the payment transaction property.
+     * Amounts are compared as money, other values as strings.
+     *
+     * @param       string      $propertyPath       Property path
+     * @param       mixed       $propertyValue      Property value
+     * @param       mixed       $callbackValue      Callback field value
+     *
+     * @return      boolean
+     */
+    static protected function isEqualValue($propertyPath, $propertyValue, $callbackValue)
+    {
+        $callbackValue = trim((string) $callbackValue);
+
+        if (substr($propertyPath, -strlen('amount')) === 'amount')
+        {
+            return     is_numeric($propertyValue)
+                    && preg_match('/^\d+(\.\d{1,2})?$/', $callbackValue)
+                    && round((float) $propertyValue * 100) == round((float) $callbackValue * 100);
+        }
+
+        return trim((string) $propertyValue) === $callbackValue;
     }
 
     /**

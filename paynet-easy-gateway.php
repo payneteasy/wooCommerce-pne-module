@@ -11,7 +11,7 @@
  * Plugin Name:       PaynetEasy Gateway
  * Plugin URI:        http://example.com/plugin-name-uri/
  * Description:       PaynetEasy Gateway.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Author:            Edmond Dantes
  * Author URI:        https://payneteasy.com/
  * License:           MIT
@@ -27,7 +27,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 use PaynetEasy\WoocommerceGateway\WordPressPlugin;
 
-define('PAYNET_EASY_GATEWAY_VERSION', '1.1.0');
+define('PAYNET_EASY_GATEWAY_VERSION', '1.1.1');
 define('PAYNET_EASY_BASE', 'PaynetEasy\\');
 define('PAYNET_EASY_GATEWAY', 'paynet-easy-gateway');
 /**

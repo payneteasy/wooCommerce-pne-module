@@ -16,6 +16,13 @@ use PaynetEasy\PaynetEasyApi\Transport\Response;
 class PaymentStrategy
 {
     /**
+     * TRUE if the transaction already had its result before this request
+     *
+     * @var bool
+     */
+    protected $isFinished = false;
+
+    /**
      * Update current status
      */
     const ACTION_STATUS             = 'status';
@@ -107,6 +114,16 @@ class PaymentStrategy
         return $_REQUEST[self::PAYNET_PARAMETER];
     }
     
+    /**
+     * TRUE if the transaction already had its result before this request
+     *
+     * @return bool
+     */
+    public function isFinished()
+    {
+        return $this->isFinished;
+    }
+
     public function getResponse()
     {
         if($this->callback instanceof CallbackResponse)
@@ -127,8 +144,13 @@ class PaymentStrategy
             $this->detectPaynetCallback();
             $this->defineCurrentTransaction();
             $this->processing();
-            
-            if($this->transaction->isReversal())
+
+            if($this->isFinished)
+            {
+                // The transaction already has its result: nothing changes
+                $this->integration->debug($this->orderId.": Transaction {$this->transaction->getTransactionId()} is already done, order not changed");
+            }
+            elseif($this->transaction->isReversal())
             {
                 $this->handleReversalTransaction();
             }
@@ -284,6 +306,18 @@ class PaymentStrategy
             );
         }
     
+        // A finished sale transaction keeps its result: a repeated or late callback
+        // or customer return must not run the order handlers again
+        if(($this->action === self::ACTION_CALLBACK || $this->action === self::ACTION_REDIRECT)
+           && !$this->transaction->isReversal()
+           && !($this->callback instanceof CallbackResponse && $this->callback->isReversal())
+           && $this->transaction->getState() === Transaction::STATE_DONE)
+        {
+            $this->response     = $this->transaction->getResponse();
+            $this->isFinished   = true;
+            return;
+        }
+
         if($this->action === self::ACTION_CALLBACK)
         {
             $this->integration->debug($this->orderId.": Detect callback for transaction {$this->transaction->getTransactionId()}");
@@ -293,12 +327,11 @@ class PaymentStrategy
         {
             $this->integration->debug($this->orderId.": Detect redirect for transaction {$this->transaction->getTransactionId()}");
 
-            // When the transaction has been processed, but redirect happened
-            // Check that case
-            // The redirect data is not verified here: keep the stored result.
+            // The redirect data is not verified here: keep the stored result
             if(!$this->transaction->isProcessing())
             {
-                $this->response = $this->transaction->getResponse();
+                $this->response     = $this->transaction->getResponse();
+                $this->isFinished   = true;
                 return;
             }
 

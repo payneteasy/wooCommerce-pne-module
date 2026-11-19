@@ -159,7 +159,13 @@ class WCIntegration                 implements IntegrationInterface
         try
         {
             $this->payment_strategy->execute();
-    
+
+            // Repeated or late callback for a finished transaction: nothing to record
+            if($this->payment_strategy->isFinished())
+            {
+                return 0;
+            }
+
             // Check if transaction and  exists response
             $response                   = $this->payment_strategy->getResponse();
             

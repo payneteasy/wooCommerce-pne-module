@@ -764,6 +764,12 @@ class WCIntegration                 implements IntegrationInterface
             return;
         }
     
+        // Complete the order once: the customer return and the callback both get here
+        if($order->is_paid())
+        {
+            return;
+        }
+
         $transaction_id             = $transaction->getTransactionId();
         $paynet_id                  = $transaction->getResponse()->getPaymentPaynetId();
     

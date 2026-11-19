@@ -366,12 +366,8 @@ class PaymentStrategy
         }
         elseif($this->transaction->isApproved())
         {
-            if($this->action === self::ACTION_REDIRECT)
-            {
-                // nothing to do
-                return;
-            }
-
+            // The customer return is verified by its signature: complete the order
+            // here too, the server callback may come later or not at all.
             $this->handleApprove();
         }
         elseif($this->transaction->isProcessing())

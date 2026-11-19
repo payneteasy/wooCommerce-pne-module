@@ -31,6 +31,14 @@ class CallbackFactory implements CallbackFactoryInterface
      */
     public function getCallback($callbackType)
     {
+        // Only known callback classes: the type comes from the request.
+        $knownCallbacks = array('customer_return', 'sale', 'reversal', 'chargeback');
+
+        if (!in_array($callbackType, $knownCallbacks, true))
+        {
+            throw new RuntimeException("Unknown callback type");
+        }
+
         $callbackClass  = __NAMESPACE__ . '\\'.MyString::camelize($callbackType).'Callback';
 
         if (class_exists($callbackClass, true))

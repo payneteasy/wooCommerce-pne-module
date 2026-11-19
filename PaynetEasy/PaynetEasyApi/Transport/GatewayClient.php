@@ -18,8 +18,11 @@ class GatewayClient implements GatewayClientInterface
     (
         CURLOPT_HEADER         => 0,
         CURLOPT_USERAGENT      => 'PaynetEasy-Client/1.0',
-        CURLOPT_SSL_VERIFYHOST => 0,
-        CURLOPT_SSL_VERIFYPEER => 0,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_SSL_VERIFYPEER => 1,
+        CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT        => 60,
         CURLOPT_POST           => 1,
         CURLOPT_SSLVERSION     => 6,
         CURLOPT_RETURNTRANSFER => 1

@@ -727,6 +727,17 @@ class WCIntegration                 implements IntegrationInterface
         }
     
         $errors                     = implode("\n", $errors);
+
+        // A paid order is changed only by a reversal, never by an error.
+        if($order->is_paid())
+        {
+            $order->add_order_note
+            (
+                __('Payment declined', 'paynet-easy-gateway')
+                . " (transaction_id = $transaction_id, paynet_id = $paynet_id), order status not changed"
+            );
+            return;
+        }
     
         $order->add_order_note
         (
@@ -753,6 +764,12 @@ class WCIntegration                 implements IntegrationInterface
             return;
         }
     
+        // Complete the order once: the customer return and the callback both get here
+        if($order->is_paid())
+        {
+            return;
+        }
+
         $transaction_id             = $transaction->getTransactionId();
         $paynet_id                  = $transaction->getResponse()->getPaymentPaynetId();
     
@@ -830,6 +847,19 @@ class WCIntegration                 implements IntegrationInterface
             $transaction->setState(Transaction::STATE_DONE);
             $transaction->setStatus(Transaction::STATUS_ERROR);
             $this->saveTransaction($transaction);
+            return;
+        }
+
+        // A partial reversal does not refund the whole order.
+        $reversal_amount            = $transaction->getResponse() !== null && isset($transaction->getResponse()['amount']) ? (float) $transaction->getResponse()['amount'] : 0.0;
+
+        if($reversal_amount > 0 && $reversal_amount + 0.005 < (float) $order->get_total())
+        {
+            $order->add_order_note
+            (
+                __('Payment reversal', 'paynet-easy-gateway') . ': ' . wc_format_decimal($reversal_amount)
+            );
+            return;
         }
     
         if($transaction->getTransactionType() === Transaction::CHARGEBACK)

@@ -518,6 +518,23 @@ class WCIntegration                 implements IntegrationInterface
         
             $transaction->setTransactionId($wpdb->insert_id);
         }
+
+        // Remember what this transaction asks the customer to pay: the sale request
+        // is signed with this amount, so the gateway charges exactly it.
+        if($payment instanceof Payment && !$transaction->isReversal() && $payment->getAmount() !== null && $payment->getAmount() !== '')
+        {
+            $order                  = wc_get_order($transaction->getOrderId());
+
+            if($order && !$order->get_meta('_paynet_sale_'.$transaction->getTransactionId()))
+            {
+                $order->update_meta_data('_paynet_sale_'.$transaction->getTransactionId(),
+                [
+                    'amount'        => number_format((float) $payment->getAmount(), 2, '.', ''),
+                    'currency'      => strtoupper((string) $payment->getCurrency())
+                ]);
+                $order->save();
+            }
+        }
     }
     
     /**
@@ -778,6 +795,25 @@ class WCIntegration                 implements IntegrationInterface
 
         $transaction_id             = $transaction->getTransactionId();
         $paynet_id                  = $transaction->getResponse()->getPaymentPaynetId();
+
+        // The order counts as paid only for the amount and currency of the paid sale
+        // (the order may have been changed after the payment form was created).
+        $sale                       = $order->get_meta('_paynet_sale_'.$transaction_id);
+
+        if(is_array($sale)
+           && (strtoupper((string) $sale['currency']) !== strtoupper($order->get_currency())
+               || (int) round((float) $sale['amount'] * 100) !== (int) round((float) $order->get_total() * 100)))
+        {
+            $order->add_order_note
+            (
+                __('Payment approved', 'paynet-easy-gateway')
+                . " (paynet id = $paynet_id): {$sale['amount']} {$sale['currency']}, "
+                . __('the paid amount does not match the order total', 'paynet-easy-gateway')
+                . ' ' . wc_format_decimal($order->get_total(), 2) . ' ' . $order->get_currency()
+            );
+            $order->update_status('on-hold');
+            return;
+        }
     
         $order->add_order_note(__('Payment approved', 'paynet-easy-gateway')." (paynet id = $paynet_id)");
         $order->payment_complete($transaction_id);

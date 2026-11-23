@@ -1158,7 +1158,7 @@ class WCIntegration                 implements IntegrationInterface
     public function getQueryConfig()
     {
         /**
-         * Точка входа для аккаунта мерчанта, выдается при подключении
+         * Merchant account endpoint, issued on connection
          */
         $end_point                  = $this->getEndPoint();
         $end_point_group            = $this->getEndPointGroup();
@@ -1166,31 +1166,31 @@ class WCIntegration                 implements IntegrationInterface
         $config                     =
             [
                 /**
-                 * Логин мерчанта, выдается при подключении
+                 * Merchant login, issued on connection
                  */
                 'login'                 => $this->getPaynetLogin(),
                 /**
-                 * Ключ мерчанта для подписывания запросов, выдается при подключении
+                 * Merchant key for signing requests, issued on connection
                  */
                 'signing_key'           => $this->getMerchantControl(),
                 /**
-                 * URL на который пользователь будет перенаправлен после окончания запроса
+                 * URL the customer is redirected to after the request
                  */
                 'redirect_url'          => $this->getRedirectUrl(),
                 /**
-                 * URL на который пользователь будет перенаправлен после окончания запроса
+                 * URL the customer is redirected to after the request
                  */
                 'callback_url'          => $this->getCallbackUrl(),
                 /**
-                 * Режим работы библиотеки: sandbox, production
+                 * Library mode: sandbox, production
                  */
                 'gateway_mode'          => $this->getGatewayMode(),
                 /**
-                 * Ссылка на шлюз PaynetEasy для режима работы sandbox
+                 * PaynetEasy gateway URL for the sandbox mode
                  */
                 'gateway_url_sandbox'   => $this->settings['gateway_url_sandbox'] ?? null,
                 /**
-                 * Ссылка на шлюз PaynetEasy для режима работы production
+                 * PaynetEasy gateway URL for the production mode
                  */
                 'gateway_url_production' => $this->settings['gateway_url'] ?? ''
             ];

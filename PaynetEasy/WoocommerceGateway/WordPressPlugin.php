@@ -243,6 +243,12 @@ class WordPressPlugin
         $transaction                = $gateway->handle_progress();
         $redirect                   = null;
 
+        // No payment in progress for this customer: show the page as usual
+        if($transaction === null)
+        {
+            return $template;
+        }
+
         // If transaction is done
         if(false === $transaction->isProcessing() || $transaction->isRedirect())
         {

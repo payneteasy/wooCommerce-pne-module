@@ -31,7 +31,7 @@ define('PAYNET_EASY_GATEWAY_VERSION', '1.1.5');
 define('PAYNET_EASY_BASE', 'PaynetEasy\\');
 define('PAYNET_EASY_GATEWAY', 'paynet-easy-gateway');
 /**
- * Параметр для определения страницы прогресса
+ * Parameter that marks the progress page
  */
 define('PAYNET_EASY_PAGE', 'payneteasy-page');
 

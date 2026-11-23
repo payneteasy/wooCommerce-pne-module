@@ -141,12 +141,16 @@ class WCIntegration                 implements IntegrationInterface
     public function processPayment()
     {
         // restore transaction id
-        $transaction_id             = WC()->session->get(self::TRANSACTION_ID);
+        $transaction_id             = WC()->session ? WC()->session->get(self::TRANSACTION_ID) : null;
         
-        if(!empty($transaction_id))
+        // The progress page belongs to a payment started at checkout: without it
+        // nothing is done (an anonymous request must not create transactions)
+        if(empty($transaction_id))
         {
-            $this->payment_strategy->assignTransaction($this->findTransactionById($transaction_id));
+            return null;
         }
+
+        $this->payment_strategy->assignTransaction($this->findTransactionById($transaction_id));
         
         $this->payment_strategy->execute();
         return $this->payment_strategy->getTransaction();
@@ -408,11 +412,19 @@ class WCIntegration                 implements IntegrationInterface
     
         if(!empty($errors))
         {
-            $errors                 = unserialize($errors);
-        
-            if(is_array($errors))
+            // Errors are stored as a JSON list of texts; older rows were serialized
+            // objects: read them without creating any object
+            $decoded                = json_decode($errors, true);
+
+            if(!is_array($decoded))
             {
-                $transaction->setErrors($errors);
+                $decoded            = @unserialize($errors, ['allowed_classes' => false]);
+                $decoded            = is_array($decoded) ? array_values(array_filter($decoded, 'is_string')) : [];
+            }
+
+            if(!empty($decoded))
+            {
+                $transaction->setErrors(array_map('strval', $decoded));
             }
         }
 
@@ -441,6 +453,21 @@ class WCIntegration                 implements IntegrationInterface
      *
      * @throws \Exception
      */
+    /**
+     * Error text for storage: no field values (card data may be among them).
+     *
+     * @param \Throwable|string|mixed $error
+     * @return string
+     */
+    public static function safeErrorText($error)
+    {
+        $text = $error instanceof \Throwable ? get_class($error).': '.$error->getMessage() : (is_scalar($error) ? (string) $error : '');
+        $text = preg_replace("/Value '[^']*'/", "Value '***'", $text);
+        $text = preg_replace('/\d{6,}/', '***', $text);
+
+        return mb_substr($text, 0, 1000);
+    }
+
     public function saveTransaction(Transaction $transaction)
     {
         global $wpdb;
@@ -471,7 +498,9 @@ class WCIntegration                 implements IntegrationInterface
         
         if(is_array($errors) && count($errors) > 0)
         {
-            $data['errors']         = serialize($errors);
+            // Only the error texts are kept: exception objects carry their stack
+            // trace, which may hold card data or keys in the call arguments
+            $data['errors']         = json_encode(array_map([self::class, 'safeErrorText'], array_values($errors)));
         }
     
         $response                   = $transaction->getResponse();

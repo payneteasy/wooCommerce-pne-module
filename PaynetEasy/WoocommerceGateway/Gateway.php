@@ -229,8 +229,22 @@ class Gateway                       extends     \WC_Payment_Gateway
      */
     public function on_redirect()
     {
-        $transaction            = $this->wc_integration->processRedirect();
-        
+        try
+        {
+            $transaction        = $this->wc_integration->processRedirect();
+        }
+        catch (\Throwable $exception)
+        {
+            // The result is not known from this request (bad data, unknown transaction,
+            // gateway error): the customer gets a page of the shop, not a server error.
+            if(function_exists('wc_add_notice'))
+            {
+                wc_add_notice(__('The payment result is not known yet. If the payment was made, the order will be updated shortly.', 'paynet-easy-gateway'), 'notice');
+            }
+            wp_safe_redirect(wc_get_page_permalink('shop'));
+            return 1;
+        }
+
         $redirect               = $this->define_redirect_for_transaction($transaction);
 
         if($redirect !== null)

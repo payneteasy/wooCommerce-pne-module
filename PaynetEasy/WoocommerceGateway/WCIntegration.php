@@ -24,6 +24,12 @@ class WCIntegration                 implements IntegrationInterface
 {
     const DATABASE_TABLE            = 'payneteasy_transactions';
     const TRANSACTION_ID            = 'payneteasy_transaction_id';
+
+    /** How many times the result of a refund is asked right after the request */
+    const REFUND_STATUS_RETRIES     = 5;
+
+    /** @var bool A refund request of the shop is being processed */
+    protected $refund_by_shop       = false;
     
     protected $table                = '';
     
@@ -284,7 +290,8 @@ class WCIntegration                 implements IntegrationInterface
         
             $order                      = wc_get_order($transaction->getOrderId());
         
-            if(empty($order))
+            // A request without the gateway signature leaves no trace in the order
+            if(empty($order) || $exception instanceof \PaynetEasy\PaynetEasyApi\Exception\ValidationException)
             {
                 throw $exception;
             }
@@ -347,9 +354,37 @@ class WCIntegration                 implements IntegrationInterface
         
         $transaction->setPayment(new Payment($data));
         
-        // Execute query
-        $this->payment_strategy->execute();
-        return $this->payment_strategy->getTransaction();
+        // WooCommerce records the refund and the order status itself when this request succeeds
+        $this->refund_by_shop       = true;
+
+        try
+        {
+            // Execute query
+            $this->payment_strategy->execute();
+            $transaction            = $this->payment_strategy->getTransaction();
+
+            // The gateway has only accepted the request: ask a few times for the result
+            for($attempt = 0; $attempt < self::REFUND_STATUS_RETRIES && $transaction !== null && $transaction->isProcessing(); $attempt++)
+            {
+                sleep(1);
+                $this->payment_strategy->execute();
+                $transaction        = $this->payment_strategy->getTransaction();
+            }
+        }
+        finally
+        {
+            $this->refund_by_shop   = false;
+        }
+
+        if($transaction !== null && $transaction->isProcessing() && $order)
+        {
+            $order->add_order_note
+            (
+                __('The refund was accepted by the payment gateway, but its result is not known yet. Check it in the PaynetEasy account before refunding again.', 'paynet-easy-gateway')
+            );
+        }
+
+        return $transaction;
     }
     
     /**
@@ -918,6 +953,12 @@ class WCIntegration                 implements IntegrationInterface
             $transaction->setState(Transaction::STATE_DONE);
             $transaction->setStatus(Transaction::STATUS_ERROR);
             $this->saveTransaction($transaction);
+            return;
+        }
+
+        // A refund started in the shop is recorded by WooCommerce itself
+        if($this->refund_by_shop)
+        {
             return;
         }
 

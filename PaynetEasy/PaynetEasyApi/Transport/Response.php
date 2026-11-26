@@ -43,7 +43,14 @@ class Response extends ArrayObject
 
     public function __construct($response = array())
     {
-        parent::__construct(array_map('trim', $response));
+        // Request data may hold arrays (x[]=1): only scalar values are kept
+        $values = array();
+        foreach ((array) $response as $key => $value) {
+            if (is_scalar($value)) {
+                $values[$key] = is_string($value) ? trim($value) : $value;
+            }
+        }
+        parent::__construct($values);
     }
 
     /**

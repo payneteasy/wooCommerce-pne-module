@@ -1,7 +1,9 @@
 <?php
 namespace PaynetEasy\PaynetEasyApi\Strategies;
 
+use PaynetEasy\PaynetEasyApi\PaymentData\Payment;
 use PaynetEasy\PaynetEasyApi\Exception\PaynetException;
+use PaynetEasy\PaynetEasyApi\Exception\ValidationException;
 use PaynetEasy\PaynetEasyApi\Exception\PaynetIdUndefined;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionHasWrongState;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionNotFoundByPaynetId;
@@ -316,6 +318,21 @@ class PaymentStrategy
                || (($this->action === self::ACTION_CALLBACK || $this->action === self::ACTION_REDIRECT)
                    && $this->callback instanceof CallbackResponse && $this->callback->isReversal())))
         {
+            // The stored result leads the customer to the order page: only a return
+            // signed by the gateway for this very order may get it.
+            if($this->action === self::ACTION_REDIRECT && !$this->isSignedReturn())
+            {
+                throw new ValidationException('Invalid callback control code');
+            }
+
+            // The gateway reports a reversal or chargeback of this sale. Nothing from
+            // the callback is used: the gateway is asked what happened to the sale.
+            if($this->action === self::ACTION_CALLBACK
+               && $this->callback instanceof CallbackResponse && $this->callback->isReversal())
+            {
+                $this->recordReversalFromGateway($paymentProcessor);
+            }
+
             $this->response     = $this->transaction->getResponse();
             $this->isFinished   = true;
             return;
@@ -368,8 +385,130 @@ class PaymentStrategy
         }
     }
     
+    /**
+     * TRUE if the customer return carries the gateway signature for the current transaction.
+     *
+     * @return bool
+     */
+    protected function isSignedReturn()
+    {
+        if(!$this->callback instanceof CallbackResponse || $this->transaction === null)
+        {
+            return false;
+        }
+
+        $clientId                   = (string) $this->callback->getPaymentClientId();
+        $signingKey                 = (string) $this->transaction->getQueryConfig()->getSigningKey();
+
+        if($signingKey === '' || $clientId === '' || $clientId !== (string) $this->transaction->getOrderId())
+        {
+            return false;
+        }
+
+        $expected                   = sha1
+        (
+            $this->callback->getStatus() .
+            $this->callback->getPaymentPaynetId() .
+            $clientId .
+            $signingKey
+        );
+
+        return hash_equals($expected, (string) $this->callback->getControlCode());
+    }
+
+    /**
+     * Records a reversal or chargeback that the gateway confirms for the sale
+     * of the current transaction (started outside the shop, or a shop refund
+     * whose result was not known).
+     *
+     * @param PaymentProcessor $paymentProcessor
+     */
+    protected function recordReversalFromGateway($paymentProcessor)
+    {
+        $sale                       = $this->transaction;
+
+        if($sale->getState() !== Transaction::STATE_DONE || !$sale->isApproved() || $sale->getPayment() === null)
+        {
+            return;
+        }
+
+        $orderId                    = $sale->getOrderId();
+        $paynetId                   = $sale->getPayment()->getPaynetId();
+
+        if(empty($orderId) || empty($paynetId))
+        {
+            return;
+        }
+
+        try
+        {
+            $types                  = [Transaction::REVERSAL, Transaction::CHARGEBACK];
+
+            // Already recorded: a repeated callback changes nothing
+            if($this->integration->findTransactionByOrderId($orderId, [
+                'transaction_type'  => $types,
+                'state'             => Transaction::STATE_DONE,
+                'status'            => Transaction::STATUS_APPROVED,
+            ]) !== null)
+            {
+                return;
+            }
+
+            // A refund of the shop that still waits for its result is finished here
+            $reversal               = $this->integration->findTransactionByOrderId($orderId, [
+                'transaction_type'  => $types,
+                'state'             => Transaction::STATE_PROCESSING,
+            ]);
+
+            if($reversal === null)
+            {
+                $reversal           = $this->integration->newTransaction($orderId, false);
+                $reversal->setTransactionType(Transaction::REVERSAL);
+                $reversal->setOperation(Transaction::REVERSAL);
+                $reversal->setPayment(new Payment(['client_id' => $orderId, 'paynet_id' => $paynetId]));
+            }
+
+            $response               = $paymentProcessor->executeQuery('status', $reversal);
+
+            if($response === null)
+            {
+                return;
+            }
+
+            $type                   = isset($response['transaction-type']) ? strtolower(trim((string) $response['transaction-type'])) : '';
+
+            if(!$response->isApproved() || !in_array($type, $types, true))
+            {
+                $this->integration->debug($orderId.": Reversal callback is not confirmed by the gateway (type '{$type}'), order not changed");
+                return;
+            }
+
+            $reversal->setTransactionType($type);
+            $reversal->setOperation($type);
+            $reversal->setResponse($response);
+            $reversal->setState(Transaction::STATE_DONE);
+            $this->integration->saveTransaction($reversal);
+            $this->integration->debug($orderId.": Reversal confirmed by the gateway {$reversal->getTransactionId()}");
+            $this->integration->onReversal($reversal);
+        }
+        catch (\Exception $exception)
+        {
+            $this->integration->error('Reversal callback: '.$exception->getMessage());
+        }
+    }
+
     protected function handleReversalTransaction()
     {
+        // Right after the return request the gateway may still answer with the
+        // approved sale: that is not the result of the reversal yet.
+        $type                       = $this->response !== null && isset($this->response['transaction-type'])
+                                    ? strtolower(trim((string) $this->response['transaction-type'])) : '';
+
+        if($this->transaction->isApproved() && $type !== '' && !in_array($type, ['reversal', 'chargeback'], true))
+        {
+            $this->transaction->setStatus(Transaction::STATUS_PROCESSING);
+        }
+
         if($this->transaction->isDeclined() || $this->transaction->isError())
         {
             $this->transaction->setState(Transaction::STATE_DONE);

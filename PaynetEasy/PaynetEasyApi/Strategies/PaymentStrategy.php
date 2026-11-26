@@ -3,6 +3,7 @@ namespace PaynetEasy\PaynetEasyApi\Strategies;
 
 use PaynetEasy\PaynetEasyApi\PaymentData\Payment;
 use PaynetEasy\PaynetEasyApi\Exception\PaynetException;
+use PaynetEasy\PaynetEasyApi\Exception\RequestException;
 use PaynetEasy\PaynetEasyApi\Exception\ValidationException;
 use PaynetEasy\PaynetEasyApi\Exception\PaynetIdUndefined;
 use PaynetEasy\PaynetEasyApi\Exception\TransactionHasWrongState;
@@ -163,6 +164,19 @@ class PaymentStrategy
         }
         catch (\Exception $exception)
         {
+            // The gateway did not answer a request about a payment it already knows:
+            // nothing is known about the result, the transaction stays as it is
+            // and its status is asked again later.
+            if($this->isResultUnknown($exception))
+            {
+                $this->integration->error
+                (
+                    $this->orderId.": No answer from the gateway for transaction {$this->transaction->getTransactionId()}"
+                    .', its status will be asked again: '.$exception->getMessage()
+                );
+                return;
+            }
+
             $this->handleException($exception);
             // remove components
             $this->response         = null;
@@ -341,7 +355,7 @@ class PaymentStrategy
         if($this->action === self::ACTION_CALLBACK)
         {
             $this->integration->debug($this->orderId.": Detect callback for transaction {$this->transaction->getTransactionId()}");
-            $this->response     = $paymentProcessor->processPaynetEasyCallback($this->callback, $this->transaction);
+            $this->response     = $this->processVerifiedCallback($paymentProcessor, false);
         }
         elseif ($this->action === self::ACTION_REDIRECT)
         {
@@ -355,7 +369,7 @@ class PaymentStrategy
                 return;
             }
 
-            $this->response     = $paymentProcessor->processCustomerReturn($this->callback, $this->transaction);
+            $this->response     = $this->processVerifiedCallback($paymentProcessor, true);
             
             if($this->response !== null) {
                 // mark transaction is done
@@ -385,6 +399,69 @@ class PaymentStrategy
         }
     }
     
+    /**
+     * Processes the callback or the customer return.
+     * The library reports the status "error" as an exception even when the data
+     * is signed by the gateway: such a result is final and is handled like a decline.
+     *
+     * @param PaymentProcessor $paymentProcessor
+     * @param bool             $isCustomerReturn
+     *
+     * @return CallbackResponse|null
+     *
+     * @throws \Exception
+     */
+    protected function processVerifiedCallback($paymentProcessor, $isCustomerReturn)
+    {
+        try
+        {
+            return $isCustomerReturn
+                ? $paymentProcessor->processCustomerReturn($this->callback, $this->transaction)
+                : $paymentProcessor->processPaynetEasyCallback($this->callback, $this->transaction);
+        }
+        catch (\Exception $exception)
+        {
+            if($exception instanceof ValidationException
+               || !$this->callback->isError()
+               || !$this->isSignedReturn()
+               || (string) $this->callback->getPaymentPaynetId() === ''
+               || $this->transaction->getPayment() === null
+               || (string) $this->callback->getPaymentPaynetId() !== (string) $this->transaction->getPayment()->getPaynetId())
+            {
+                throw $exception;
+            }
+
+            $this->integration->debug($this->orderId.": Signed status 'error' for transaction {$this->transaction->getTransactionId()}");
+            $this->transaction->setStatus(Transaction::STATUS_ERROR);
+
+            return $this->callback;
+        }
+    }
+
+    /**
+     * TRUE if the exception is a transport failure (timeout, no answer) of a request
+     * about a payment that the gateway already knows by its paynet id.
+     *
+     * @param \Exception $exception
+     *
+     * @return bool
+     */
+    protected function isResultUnknown(\Exception $exception)
+    {
+        if(!$exception instanceof RequestException
+           || in_array($this->action, [self::ACTION_CALLBACK, self::ACTION_REDIRECT], true)
+           || $this->transaction === null
+           || $this->transaction->isReversal()
+           || $this->transaction->getTransactionId() === null
+           || $this->transaction->getState() !== Transaction::STATE_PROCESSING
+           || $this->transaction->getPayment() === null)
+        {
+            return false;
+        }
+
+        return !empty($this->transaction->getPayment()->getPaynetId());
+    }
+
     /**
      * TRUE if the customer return carries the gateway signature for the current transaction.
      *

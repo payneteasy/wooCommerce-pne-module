@@ -28,6 +28,11 @@ class WCIntegration                 implements IntegrationInterface
     /** How many times the result of a refund is asked right after the request */
     const REFUND_STATUS_RETRIES     = 5;
 
+    /**
+     * Seconds to wait for the per-order lock (longer than one gateway request)
+     */
+    const LOCK_TIMEOUT              = 70;
+
     /** @var bool A refund request of the shop is being processed */
     protected $refund_by_shop       = false;
     
@@ -156,10 +161,106 @@ class WCIntegration                 implements IntegrationInterface
             return null;
         }
 
-        $this->payment_strategy->assignTransaction($this->findTransactionById($transaction_id));
-        
-        $this->payment_strategy->execute();
+        // The transaction is read under the lock: the callback may be finishing it right now
+        $transaction                = $this->findTransactionById($transaction_id);
+
+        try
+        {
+            $lock                   = $this->lockOrder($transaction->getOrderId());
+        }
+        catch (\Exception $exception)
+        {
+            // Another request is working on the order: show its current state, the progress page asks again
+            $this->error($exception->getMessage());
+            return $transaction;
+        }
+
+        try
+        {
+            $this->payment_strategy->assignTransaction($this->findTransactionById($transaction_id));
+
+            $this->payment_strategy->execute();
+        }
+        finally
+        {
+            $this->unlockOrder($lock);
+        }
+
         return $this->payment_strategy->getTransaction();
+    }
+
+    /**
+     * Order id of the callback or customer return of the current request
+     * (by the paynet id of a known transaction, else as given in the request).
+     *
+     * @return string|null
+     */
+    protected function defineRequestOrderId()
+    {
+        $paynet_id                  = isset($_REQUEST['orderid']) && is_scalar($_REQUEST['orderid']) ? (string) $_REQUEST['orderid'] : '';
+        $order_id                   = isset($_REQUEST['client_orderid']) && is_scalar($_REQUEST['client_orderid']) ? (string) $_REQUEST['client_orderid'] : '';
+
+        if($paynet_id !== '')
+        {
+            try
+            {
+                $transaction        = $this->findTransactionByPaynetId(wp_unslash($paynet_id));
+            }
+            catch (\Exception $exception)
+            {
+                $transaction        = null;
+            }
+
+            if($transaction !== null && !empty($transaction->getOrderId()))
+            {
+                return (string) $transaction->getOrderId();
+            }
+        }
+
+        return $order_id !== '' ? $order_id : null;
+    }
+
+    /**
+     * Per-order lock: the customer return, the callback and the progress page
+     * of one order are processed one after another.
+     *
+     * @param string|int|null $order_id
+     *
+     * @return string|null  Lock name for unlockOrder(), NULL when there is nothing to lock
+     *
+     * @throws \Exception  The lock was not obtained in time
+     */
+    protected function lockOrder($order_id)
+    {
+        global $wpdb;
+
+        if($order_id === null || $order_id === '')
+        {
+            return null;
+        }
+
+        // Lock names are server-wide and limited to 64 characters
+        $lock                       = 'pne_'.md5(DB_NAME.$this->table.'|'.$order_id);
+
+        if((string) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock, self::LOCK_TIMEOUT)) !== '1')
+        {
+            throw new \Exception('The order is being processed by another request, try again later');
+        }
+
+        return $lock;
+    }
+
+    /**
+     * @param string|null $lock
+     */
+    protected function unlockOrder($lock)
+    {
+        global $wpdb;
+
+        if($lock !== null)
+        {
+            $wpdb->query($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
+        }
     }
     
     public function processCallback()
@@ -168,7 +269,26 @@ class WCIntegration                 implements IntegrationInterface
         
         try
         {
-            $this->payment_strategy->execute();
+            $lock                   = $this->lockOrder($this->defineRequestOrderId());
+        }
+        catch (\Exception $exception)
+        {
+            // Not processed: the gateway repeats the callback
+            $this->error($exception->getMessage());
+            status_header(503);
+            return -5;
+        }
+
+        try
+        {
+            try
+            {
+                $this->payment_strategy->execute();
+            }
+            finally
+            {
+                $this->unlockOrder($lock);
+            }
 
             // Repeated or late callback for a finished transaction: nothing to record
             if($this->payment_strategy->isFinished())
@@ -238,10 +358,20 @@ class WCIntegration                 implements IntegrationInterface
     public function processRedirect()
     {
         $this->notice('Detect redirect link using');
-    
+
+        // Not obtained in time: the exception goes to the caller, the result is not known from this request
+        $lock                       = $this->lockOrder($this->defineRequestOrderId());
+
         try
         {
-            $this->payment_strategy->execute();
+            try
+            {
+                $this->payment_strategy->execute();
+            }
+            finally
+            {
+                $this->unlockOrder($lock);
+            }
     
             $response                   = $this->payment_strategy->getResponse();
             
@@ -864,9 +994,21 @@ class WCIntegration                 implements IntegrationInterface
         // (the order may have been changed after the payment form was created).
         $sale                       = $order->get_meta('_paynet_sale_'.$transaction_id);
 
-        if(is_array($sale)
-           && (strtoupper((string) $sale['currency']) !== strtoupper($order->get_currency())
-               || (int) round((float) $sale['amount'] * 100) !== (int) round((float) $order->get_total() * 100)))
+        // The expected amount is not known: the order is not completed without a check
+        if(!is_array($sale) || !isset($sale['amount'], $sale['currency']))
+        {
+            $order->add_order_note
+            (
+                __('Payment approved', 'paynet-easy-gateway')
+                . " (paynet id = $paynet_id), "
+                . __('but the amount of the sale is not known: check the payment in the PaynetEasy account before completing the order', 'paynet-easy-gateway')
+            );
+            $order->update_status('on-hold');
+            return;
+        }
+
+        if(strtoupper((string) $sale['currency']) !== strtoupper($order->get_currency())
+           || (int) round((float) $sale['amount'] * 100) !== (int) round((float) $order->get_total() * 100))
         {
             $order->add_order_note
             (

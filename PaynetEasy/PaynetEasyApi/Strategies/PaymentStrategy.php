@@ -306,14 +306,15 @@ class PaymentStrategy
             );
         }
     
-        // A finished sale transaction keeps its result: a repeated or late callback
-        // or customer return must not run the order handlers again.
+        // A finished sale transaction keeps its result: a repeated or late callback,
+        // customer return or request of the progress page must not run the order
+        // handlers again or send the sale again.
         // The callback type is not signed: a reversal or chargeback callback never
         // runs the sale handlers of a sale transaction.
-        if(($this->action === self::ACTION_CALLBACK || $this->action === self::ACTION_REDIRECT)
-           && !$this->transaction->isReversal()
+        if(!$this->transaction->isReversal()
            && ($this->transaction->getState() === Transaction::STATE_DONE
-               || ($this->callback instanceof CallbackResponse && $this->callback->isReversal())))
+               || (($this->action === self::ACTION_CALLBACK || $this->action === self::ACTION_REDIRECT)
+                   && $this->callback instanceof CallbackResponse && $this->callback->isReversal())))
         {
             $this->response     = $this->transaction->getResponse();
             $this->isFinished   = true;
